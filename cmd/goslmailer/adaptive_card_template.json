@@ -1,0 +1,149 @@
+{
+  "type":"message",
+  "attachments":[
+    {
+      "contentType":"application/vnd.microsoft.card.adaptive",
+      "content":{
+        "type":"AdaptiveCard",
+        "body":[
+          {
+            "type":"TextBlock",
+            "size":"medium",
+            "weight":"bolder",
+            "text":"CBE Slurm job info",
+            "style":"heading"
+          },
+          {
+            "type":"ColumnSet",
+            "columns":[
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"Image",
+                    "style":"person",
+                    "url":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/590px-Slurm_logo.svg.png",
+                    "size":"small"
+                  }
+                ],
+                "width":"auto"
+              },
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"TextBlock",
+                    "weight":"bolder",
+                    "text":"Job {{ .Job.SlurmEnvironment.SLURM_JOB_ID }} {{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}",
+                    "wrap":true,
+                    "size":"Large",
+                    {{ if eq .Job.SlurmEnvironment.SLURM_JOB_STATE "FAILED" }}"color":"Attention"{{ else }}"color":"Good"{{ end }}
+                  },
+                  {
+                    "type":"TextBlock",
+                    "spacing":"none",
+                    "text":"Created $(date)",
+                    "isSubtle":true,
+                    "wrap":true
+                  }
+                ],
+                "width":"stretch"
+              }
+            ]
+          },
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"true",
+            "id":"ExternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
+              },
+              {
+                "title":"Job ID",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOBID }}"
+              },
+              {
+                "title":"Job Name",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NAME }}"
+              },
+              {
+                "title":"Runtime",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+              },
+              {
+                "title":"Exit Code",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_EXIT_CODE_MAX }}"
+              },
+              {
+                "title":"Compute Nodes Used",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NODELIST }}"
+              },
+              {
+                "title":"Memory Requested",
+                "value":"{{ .Job.JobStats.MemReq }}"
+              },
+              {
+                "title":"Memory Used",
+                "value":"{{ .Job.JobStats.MemUsed }}"
+              }
+            ]
+          },
+          {{ range .Job.Hints }}
+          {
+            "type":"TextBlock",
+            "text":"{{ . }}",
+            "wrap":true,
+            "color":"Attention"
+          },
+          {{ end }}
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"false",
+            "id":"InternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"<at>{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}</at>"
+              },
+              {
+                "type":"Fact",
+                "title":"JobStatus",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}"
+              }
+            ]
+          }
+        ],
+        "actions":[
+          {
+            "type":"Action.OpenUrl",
+            "title":"View Google",
+            "url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          }
+        ],
+        "$schema":"http://adaptivecards.io/schemas/adaptive-card.json",
+        "version":"1.2",
+        "msteams":{
+          "entities":[
+            {
+              "type":"mention",
+              "text":"<at>{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}</at>",
+              "mentioned":{
+              "id":"{{ .UserID }}",
+              "name":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+
