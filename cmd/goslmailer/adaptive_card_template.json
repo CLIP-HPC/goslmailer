@@ -60,34 +60,51 @@
             "facts":[
               {
                 "type":"Fact",
-                "title":"User",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
-              },
-              {
-                "title":"Job ID",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOBID }}"
-              },
-              {
-                "title":"Job Name",
+                "title":"Job name",
                 "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NAME }}"
               },
               {
-                "title":"Runtime",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+                "type":"Fact",
+                "title":"Job ID",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_ID }}"
               },
               {
-                "title":"Exit Code",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_EXIT_CODE_MAX }}"
+                "type":"Fact",
+                "title":"Job state",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_STATE }}"
               },
               {
+                "type":"Fact",
                 "title":"Compute Nodes Used",
                 "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NODELIST }}"
               },
               {
+                "type":"Fact",
+                "title":"Partition",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_PARTITION }}"
+              },
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Runtime",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Exit Code",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_EXIT_CODE_MAX }}"
+              },
+              {
+                "type":"Fact",
                 "title":"Memory Requested",
                 "value":"{{ .Job.JobStats.MemReq }}"
               },
               {
+                "type":"Fact",
                 "title":"Memory Used",
                 "value":"{{ .Job.JobStats.MemUsed }}"
               }

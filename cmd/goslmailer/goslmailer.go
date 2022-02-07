@@ -95,6 +95,7 @@ func (m *invocationContext) generateReceivers(defCon string, l *log.Logger) {
 			targetsSplit := strings.Split(t, ":")
 			l.Printf("generateReceivers: target %d = %#v\n", i, targetsSplit)
 			switch len(targetsSplit) {
+			// todo: move the lookup part of the code to the connectors, and allow every connector to specify its lookup function
 			case 1:
 				m.Receivers = append(m.Receivers, struct {
 					scheme string
@@ -114,6 +115,8 @@ func (m *invocationContext) generateReceivers(defCon string, l *log.Logger) {
 					// in case an external database has to be used to translate between user_ids for a certain scheme, use the lookup package
 					target: lookup.ExtLookupUser(targetsSplit[1], targetsSplit[0]),
 				})
+			default:
+				l.Printf("generateReceivers: IGNORING! unrecognized target string: %s\n", t)
 			}
 		}
 	}
