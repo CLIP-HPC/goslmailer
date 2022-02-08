@@ -25,8 +25,8 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ### Currently supported receiver schemes:
 
-* msteams webhook `msteams:`
-
+* msteams webhook --mail-user=`msteams:`userid
+* mailto --mail-user=`mailto:`email-addr
 
 MoreToBeWritten...
 
@@ -42,21 +42,37 @@ Specifies which receiver scheme is the default one, in case when user didn't spe
 
 ### msteams
 
+Sends a message to a preconfigured ms teams channel webhook.
+From there, you can "easily" create a MS Power Automate workflow to pick the messages up and send them via private chat message to the intended user, or whatever else comes to your mind.
+
+See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
+
+### mailto
+
+Mailto covers for original slurm e-mail sending functionality, plus a little bit more.
+In parameters, you can specify your e-mail command line prog (slurm: `MailProg`), template it's command line, message text and allowList/blockList the recipients.
+(not all is implemented yet!)
+
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 
 ---
 
 ## ToDo
 
-* fix paths managing for input files
-  * goslmailer.conf - hardcoded to /etc/slurm/goslmailer.conf until something smarter comes up
+See: [goslmailer project](https://github.com/users/pja237/projects/1/views/1)
+
+---
 
 ## Gotchas
+
+### msteams
 
 * using adaptive card schema version 1.5 doesn't work with our adaptive card, check if some element changed in designer
     * tested: 1.0, 1.2 - work
 
-## msteams references
+## references
+
+### msteams
 
 * [Adaptive cards](https://adaptivecards.io/)
 * [Adaptive cards - Designer](https://adaptivecards.io/designer/)

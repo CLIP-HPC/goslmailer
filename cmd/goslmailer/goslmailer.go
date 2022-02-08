@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pja237/goslmailer/connectors/mailto"
 	"github.com/pja237/goslmailer/connectors/msteams"
 	"github.com/pja237/goslmailer/internal/lookup"
 	"github.com/pja237/goslmailer/internal/slurmjob"
@@ -49,6 +50,17 @@ func (c *connectors) populateConnectors(i *invocationContext, conf *configContai
 	// Iterate through map of connectors from config file.
 	for k, v := range conf.Connectors {
 		switch k {
+		case "mailto":
+			// For each recognized, call the connectorpkg.NewConnector() and...
+			// todo: make this a little bit less ugly...
+			con, err := mailto.NewConnector(v)
+			if err != nil {
+				l.Printf("Problem with %s connector configuration. Ignoring.\n", k)
+				break
+			}
+			l.Printf("%s connector configured.\n", k)
+			// ...asign its return object value to the connectors map.
+			(*c)[k] = con
 		case "msteams":
 			// For each recognized, call the connectorpkg.NewConnector() and...
 			con, err := msteams.NewConnector(v)
