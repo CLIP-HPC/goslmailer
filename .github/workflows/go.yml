@@ -19,4 +19,13 @@ jobs:
 
     - name: Build
       run: make build
+      
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: goslmailer-latest
+        path: ./goslmailer
+
+      
+      
 
