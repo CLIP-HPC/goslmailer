@@ -6,10 +6,11 @@ import (
 	"strings"
 )
 
-func ExtLookupUser(user string, conn string) (u string) {
+func ExtLookupUser(user string, lookup string) (u string) {
 
-	switch conn {
-	case "msteams":
+	// this whole package needs some love, specially regarding error handling
+	switch lookup {
+	case "GECOS":
 		u = lookupGECOS(user)
 	default:
 		u = user

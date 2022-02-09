@@ -7,4 +7,5 @@ type Connector struct {
 	renderToFile         string
 	spoolDir             string
 	adaptiveCardTemplate string
+	useLookup            string
 }

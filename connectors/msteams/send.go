@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/pja237/goslmailer/internal/lookup"
 	"github.com/pja237/goslmailer/internal/slurmjob"
 )
 
@@ -21,6 +22,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		renderToFile:         conf["renderToFile"],
 		spoolDir:             conf["spoolDir"],
 		adaptiveCardTemplate: conf["adaptiveCardTemplate"],
+		useLookup:            conf["useLookup"],
 	}
 	return &c, nil
 }
@@ -53,6 +55,7 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 	l.Printf("msteams.dumpConnector: renderToFile: %s\n", c.renderToFile)
 	l.Printf("msteams.dumpConnector: spoolDir: %s\n", c.spoolDir)
 	l.Printf("msteams.dumpConnector: adaptiveCardTemplate: %s\n", c.adaptiveCardTemplate)
+	l.Printf("msteams.dumpConnector: useLookup: %s\n", c.useLookup)
 	l.Println("................................................................................")
 
 }
@@ -66,30 +69,30 @@ func (c *Connector) SendMessage(j *slurmjob.JobContext, targetUserId string, l *
 
 	l.Println("................... sendToMSTeams START ........................................")
 
+	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
+	enduser := lookup.ExtLookupUser(targetUserId, c.useLookup)
+	l.Printf("Looked up %s -> %s\n", targetUserId, enduser)
+
 	// prepare outfile name
 	t := strconv.FormatInt(time.Now().UnixNano(), 10)
 	l.Printf("MsTeams time: %s\n", t)
-	outFile = "rendered-" + j.SLURM_JOB_ID + "-" + targetUserId + "-" + t + ".json"
+	outFile = "rendered-" + j.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
 
-	l.Printf("MsTeams sending to targetUserID: %s\n", targetUserId)
+	l.Printf("MsTeams sending to targetUserID: %s\n", enduser)
 
 	// debug purposes
 	c.dumpConnector(l)
 
-	// here we put some logic, e.g.
+	// here we can put some logic, e.g.
 	// if job==fail, send red card
 	// else if job==begin, send green card
 	// else if job==end, send green card with jobinfo
 	// else blabla
-	// or... we do it in template?
-	//
-	//if j.SlurmEnvironment.SLURM_JOB_MAIL_TYPE == "Failed" {
-	//	fmt.Println("sendToMSTeams: job Failed")
-	//}
+	// or do it in template
 
 	// buffer to place rendered json in
 	buffer := bytes.Buffer{}
-	err := c.msteamsRenderCardTemplate(j, targetUserId, &buffer)
+	err := c.msteamsRenderCardTemplate(j, enduser, &buffer)
 	if err != nil {
 		return err
 	}

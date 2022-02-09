@@ -47,7 +47,7 @@ func (j *JobContext) GetSlurmEnvVars() {
 }
 
 // Get additional job statistics from external source (e.g. jobinfo or sacct)
-func (j *JobContext) GetJobStats(s SlurmEnvironment) {
+func (j *JobContext) GetJobStats() {
 	j.JobStats.MemReq = 4096
 	j.JobStats.MemUsed = 1024
 	// FUTURE: employ jobinfo to do the job or call sacct and get the data we need ourself
