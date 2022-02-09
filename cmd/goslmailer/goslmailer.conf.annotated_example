@@ -7,8 +7,9 @@
       "spoolDir": "/tmp",                           # see below.
       "renderToFile": "yes",                        # if "yes"; dump rendered templates to working dir; else if "spool"; dump to spoolDir; else; send to teams url
       "url": "https://msteams/webhook/url",         # ms teams webhook url
-      "adaptiveCardTemplate": "/path/template.json" # full path to adaptive card template file
-    },                                              #
+      "adaptiveCardTemplate": "/path/template.json",# full path to adaptive card template file
+      "useLookup": "GECOS"                          # which function from lookup package the connector uses to map cmdline userid to end-system userid
+    },                                              #  available lookups ("GECOS", "none")
     "mailto": {
       "name": "original slurm mail, extended.",                # unused
       "mailCmd": "/bin/mail",                         # This would be the place to put the content of original slurm MailProg parameter, e.g. '/bin/mail'
