@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"text/template"
 
-	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/message"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {
@@ -22,14 +22,14 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 	return &c, nil
 }
 
-func (c *Connector) SendMessage(j *slurmjob.JobContext, targetUserId string, l *log.Logger) error {
+func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
 	var (
 		e         error
 		cmdparams = bytes.Buffer{}
 	)
 
 	tmpl := template.Must(template.New("cmdparams").Parse(c.mailCmdParams))
-	e = tmpl.Execute(&cmdparams, j)
+	e = tmpl.Execute(&cmdparams, mp.JobContext)
 	if e != nil {
 		return e
 	}
@@ -38,7 +38,7 @@ func (c *Connector) SendMessage(j *slurmjob.JobContext, targetUserId string, l *
 	// todo:
 	// - call lookup on targetUserId
 	// - test if in allowList/blockList
-	cmd := exec.Command(c.mailCmd, cmdparams.String(), targetUserId)
+	cmd := exec.Command(c.mailCmd, cmdparams.String(), mp.TargetUser)
 	//cmd.Stdin = bytes.NewBuffer([]byte{0x04})
 	out, e := cmd.Output()
 	if e != nil {

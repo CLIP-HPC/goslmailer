@@ -5,11 +5,11 @@ import (
 
 	"github.com/pja237/goslmailer/connectors/mailto"
 	"github.com/pja237/goslmailer/connectors/msteams"
-	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/message"
 )
 
 type connector interface {
-	SendMessage(*slurmjob.JobContext, string, *log.Logger) error
+	SendMessage(*message.MessagePack, *log.Logger) error
 }
 
 type connectors map[string]connector
@@ -24,7 +24,7 @@ func (c *connectors) populateConnectors(conf *configContainer, l *log.Logger) er
 			// todo: make this a little bit less ugly...
 			con, err := mailto.NewConnector(v)
 			if err != nil {
-				l.Printf("Problem with %s connector configuration. Ignoring.\n", k)
+				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
 				break
 			}
 			l.Printf("%s connector configured.\n", k)
@@ -34,7 +34,7 @@ func (c *connectors) populateConnectors(conf *configContainer, l *log.Logger) er
 			// For each recognized, call the connectorpkg.NewConnector() and...
 			con, err := msteams.NewConnector(v)
 			if err != nil {
-				l.Printf("Problem with %s connector configuration. Ignoring.\n", k)
+				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
 				break
 			}
 			l.Printf("%s connector configured.\n", k)

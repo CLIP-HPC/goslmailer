@@ -2,6 +2,7 @@ package msteams
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -11,7 +12,9 @@ import (
 	"time"
 
 	"github.com/pja237/goslmailer/internal/lookup"
+	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/spool"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {
@@ -23,6 +26,13 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		spoolDir:             conf["spoolDir"],
 		adaptiveCardTemplate: conf["adaptiveCardTemplate"],
 		useLookup:            conf["useLookup"],
+	}
+	// if renderToFile=="no" or "spool" then spoolDir must not be empty
+	switch c.renderToFile {
+	case "no", "spool":
+		if c.spoolDir == "" {
+			return nil, errors.New("spoolDir must be defined, aborting")
+		}
 	}
 	return &c, nil
 }
@@ -50,49 +60,43 @@ func (c *Connector) msteamsRenderCardTemplate(j *slurmjob.JobContext, userid str
 }
 
 func (c *Connector) dumpConnector(l *log.Logger) {
-	l.Printf("msteams.dumpConnector: name: %s\n", c.name)
-	l.Printf("msteams.dumpConnector: url: %s\n", c.url)
-	l.Printf("msteams.dumpConnector: renderToFile: %s\n", c.renderToFile)
-	l.Printf("msteams.dumpConnector: spoolDir: %s\n", c.spoolDir)
-	l.Printf("msteams.dumpConnector: adaptiveCardTemplate: %s\n", c.adaptiveCardTemplate)
-	l.Printf("msteams.dumpConnector: useLookup: %s\n", c.useLookup)
+	l.Printf("msteams.dumpConnector: name: %q\n", c.name)
+	l.Printf("msteams.dumpConnector: url: %q\n", c.url)
+	l.Printf("msteams.dumpConnector: renderToFile: %q\n", c.renderToFile)
+	l.Printf("msteams.dumpConnector: spoolDir: %q\n", c.spoolDir)
+	l.Printf("msteams.dumpConnector: adaptiveCardTemplate: %q\n", c.adaptiveCardTemplate)
+	l.Printf("msteams.dumpConnector: useLookup: %q\n", c.useLookup)
 	l.Println("................................................................................")
 
 }
 
-func (c *Connector) SendMessage(j *slurmjob.JobContext, targetUserId string, l *log.Logger) error {
+func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
 
 	var (
-		e       error
+		e       error = nil
 		outFile string
+		dts     bool = false // DumpToSpool
 	)
 
 	l.Println("................... sendToMSTeams START ........................................")
 
 	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
-	enduser := lookup.ExtLookupUser(targetUserId, c.useLookup)
-	l.Printf("Looked up %s -> %s\n", targetUserId, enduser)
+	enduser := lookup.ExtLookupUser(mp.TargetUser, c.useLookup)
+	l.Printf("Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
 
 	// prepare outfile name
 	t := strconv.FormatInt(time.Now().UnixNano(), 10)
 	l.Printf("MsTeams time: %s\n", t)
-	outFile = "rendered-" + j.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
+	outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
 
 	l.Printf("MsTeams sending to targetUserID: %s\n", enduser)
 
 	// debug purposes
 	c.dumpConnector(l)
 
-	// here we can put some logic, e.g.
-	// if job==fail, send red card
-	// else if job==begin, send green card
-	// else if job==end, send green card with jobinfo
-	// else blabla
-	// or do it in template
-
 	// buffer to place rendered json in
 	buffer := bytes.Buffer{}
-	err := c.msteamsRenderCardTemplate(j, enduser, &buffer)
+	err := c.msteamsRenderCardTemplate(mp.JobContext, enduser, &buffer)
 	if err != nil {
 		return err
 	}
@@ -100,21 +104,46 @@ func (c *Connector) SendMessage(j *slurmjob.JobContext, targetUserId string, l *
 	// this can be: "yes", "spool", anythingelse
 	switch c.renderToFile {
 	case "yes":
+		// render json template to working directory - debug purposes
 		res, err := io.ReadAll(&buffer)
 		e = err
 		os.WriteFile(outFile, res, 0644)
 		l.Printf("MsTeams send to file: %s\n", outFile)
 	case "spool":
-		res, err := io.ReadAll(&buffer)
-		e = err
-		os.WriteFile(c.spoolDir+"/"+outFile, res, 0644)
-		l.Printf("MsTeams send to spool-file: %s\n", c.spoolDir+"/"+outFile)
+		// deposit GOB to spoolDir
+		err = spool.DepositToSpool(c.spoolDir, mp)
+		if err != nil {
+			l.Printf("DepositToSpool Failed!\n")
+			return err
+		}
 	default:
 		// handle here "too many requests" 4xx and place the rendered message to spool dir to be picked up later by the "throttler"
 		resp, err := http.Post(c.url, "application/json", &buffer)
-		e = err
-		l.Printf("MsTeams RESPONSE Status: %s\n", resp.Status)
-		l.Printf("MsTeams RESPONSE Proto: %s\n", resp.Proto)
+		if err != nil {
+			l.Printf("http.Post Failed!\n")
+			dts = true
+			//return err
+			e = err
+		} else {
+			l.Printf("MsTeams RESPONSE Status: %s\n", resp.Status)
+			switch resp.StatusCode {
+			case 429:
+				l.Printf("429 received.\n")
+				dts = true
+			default:
+				l.Printf("Send OK!\n")
+			}
+		}
+	}
+
+	// either http.Post failed, or it got 429, backing off to spool
+	if dts {
+		l.Printf("Backing off to spool.\n")
+		err = spool.DepositToSpool(c.spoolDir, mp)
+		if err != nil {
+			l.Printf("DepositToSpool Failed!\n")
+			return err
+		}
 	}
 
 	l.Println("................... sendToMSTeams END ..........................................")

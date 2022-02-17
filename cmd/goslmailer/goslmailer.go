@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/slurmjob"
 )
 
@@ -98,13 +99,17 @@ func main() {
 	}
 	// here we loop through requested receivers and invoke SendMessage()
 	for _, v := range ic.Receivers {
+		mp, err := message.NewMsgPack(v.scheme, v.target, &job)
+		if err != nil {
+			log.Printf("ERROR in message.NewMsgPack(%s): %q\n", v.scheme, err)
+		}
 		con, ok := conns[v.scheme]
 		if !ok {
 			log.Printf("%s connector is not initialized for target %s. Ignoring.\n", v.scheme, v.target)
 		} else {
-			err := con.SendMessage(&job, v.target, log)
+			err := con.SendMessage(mp, log)
 			if err != nil {
-				log.Printf("ERROR in %s.SendMessage(): %s\n", v.scheme, err)
+				log.Printf("ERROR in %s.SendMessage(): %q\n", v.scheme, err)
 			}
 		}
 	}
