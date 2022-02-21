@@ -1,21 +1,23 @@
-package main
+package connectors
 
 import (
 	"log"
 
 	"github.com/pja237/goslmailer/connectors/mailto"
 	"github.com/pja237/goslmailer/connectors/msteams"
+	"github.com/pja237/goslmailer/internal/config"
 	"github.com/pja237/goslmailer/internal/message"
 )
 
-type connector interface {
-	SendMessage(*message.MessagePack, *log.Logger) error
+type Connector interface {
+	//SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error
+	SendMessage(*message.MessagePack, bool, *log.Logger) error
 }
 
-type connectors map[string]connector
+type Connectors map[string]Connector
 
 // Populate the map 'connectors' with connectors specified in config file and their instance from package.
-func (c *connectors) populateConnectors(conf *configContainer, l *log.Logger) error {
+func (c *Connectors) PopulateConnectors(conf *config.ConfigContainer, l *log.Logger) error {
 	// Iterate through map of connectors from config file.
 	for k, v := range conf.Connectors {
 		switch k {

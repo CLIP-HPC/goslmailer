@@ -1,64 +1,38 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 
+	"github.com/pja237/goslmailer/internal/config"
+	"github.com/pja237/goslmailer/internal/connectors"
 	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/slurmjob"
 )
-
-type configContainer struct {
-	Logfile          string                       `json:"logfile"`
-	DefaultConnector string                       `json:"defaultconnector"`
-	Connectors       map[string]map[string]string `json:"connectors"`
-}
-
-// Read & unmarshall configuration from 'name' file into configContainer structure
-func (cc *configContainer) getConfig(name string) error {
-	f, err := os.ReadFile(name)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(f, cc)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (cc *configContainer) dumpConfig(l *log.Logger) {
-	l.Println("DUMP CONFIG:")
-	l.Printf("CONFIGURATION: %#v\n", cc)
-	l.Printf("CONFIGURATION logfile: %s\n", cc.Logfile)
-	l.Printf("CONFIGURATION msteams.name: %s\n", cc.Connectors["msteams"]["name"])
-	l.Println("--------------------------------------------------------------------------------")
-}
 
 func main() {
 
 	var (
 		ic      invocationContext
-		config  configContainer
 		job     slurmjob.JobContext
-		conns   connectors = make(connectors)
+		conns   = make(connectors.Connectors)
 		logFile io.Writer
 	)
 
 	// read configuration
 	// how to handle hardcoding config file?
-	err := config.getConfig("/etc/slurm/goslmailer.conf")
+	cfg := config.NewConfigContainer()
+	err := cfg.GetConfig("/etc/slurm/goslmailer.conf")
 	if err != nil {
 		fmt.Printf("getConfig failed: %s", err)
 		os.Exit(1)
 	}
 
 	// setup logger
-	if config.Logfile != "" {
-		logFile, err = os.OpenFile(config.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if cfg.Logfile != "" {
+		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			fmt.Println("ERROR: can not open configured log file. Exiting.")
 			os.Exit(1)
@@ -69,14 +43,14 @@ func main() {
 	log := log.New(logFile, "goslmailer:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 
 	log.Println("======================== START OF RUN ==========================================")
-	config.dumpConfig(log)
+	cfg.DumpConfig(log)
 
 	// get '-s "subject" userid' command line parameters with which we're called
 	ic.getCMDLine()
 	ic.dumpCMDLine(log)
 
 	// parse CmdParams and generate a list of {scheme, target} receivers (e.g. [ {skype, skypeid}, {msteams, msteamsid}, ...])
-	ic.generateReceivers(config.DefaultConnector, log)
+	ic.generateReceivers(cfg.DefaultConnector, log)
 	ic.dumpReceivers(log)
 
 	// get SLURM_* environment variables
@@ -91,7 +65,7 @@ func main() {
 	job.GenerateHints()
 
 	// populate map with configured referenced connectors
-	conns.populateConnectors(&config, log)
+	conns.PopulateConnectors(cfg, log)
 
 	// Iterate over 'Receivers' map and for each call the connector.SendMessage() (if the receiver scheme is configured in conf file AND has an object in connectors map)
 	if ic.Receivers == nil {
@@ -107,7 +81,8 @@ func main() {
 		if !ok {
 			log.Printf("%s connector is not initialized for target %s. Ignoring.\n", v.scheme, v.target)
 		} else {
-			err := con.SendMessage(mp, log)
+			// useSpool == true when called from here, for connectors that use this capability
+			err := con.SendMessage(mp, true, log)
 			if err != nil {
 				log.Printf("ERROR in %s.SendMessage(): %q\n", v.scheme, err)
 			}

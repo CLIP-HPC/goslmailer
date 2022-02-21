@@ -70,7 +70,7 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 
 }
 
-func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
+func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {
 
 	var (
 		e       error = nil
@@ -106,15 +106,18 @@ func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
 	case "yes":
 		// render json template to working directory - debug purposes
 		res, err := io.ReadAll(&buffer)
+		// test err and do something!
 		e = err
 		os.WriteFile(outFile, res, 0644)
 		l.Printf("MsTeams send to file: %s\n", outFile)
 	case "spool":
-		// deposit GOB to spoolDir
-		err = spool.DepositToSpool(c.spoolDir, mp)
-		if err != nil {
-			l.Printf("DepositToSpool Failed!\n")
-			return err
+		// deposit GOB to spoolDir if allowed
+		if useSpool {
+			err = spool.DepositToSpool(c.spoolDir, mp)
+			if err != nil {
+				l.Printf("DepositToSpool Failed!\n")
+				return err
+			}
 		}
 	default:
 		// handle here "too many requests" 4xx and place the rendered message to spool dir to be picked up later by the "throttler"
@@ -137,7 +140,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
 	}
 
 	// either http.Post failed, or it got 429, backing off to spool
-	if dts {
+	if dts && useSpool {
 		l.Printf("Backing off to spool.\n")
 		err = spool.DepositToSpool(c.spoolDir, mp)
 		if err != nil {

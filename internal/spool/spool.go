@@ -42,6 +42,7 @@ func NewSpool(dir string) (*spool, error) {
 }
 
 func (s *spool) DepositGob(m *message.MessagePack) error {
+	// replace with a function
 	fn := s.spoolDir + "/" + m.Connector + "-" + m.TargetUser + "-" + strconv.FormatInt(m.TimeStamp.UnixNano(), 10) + ".gob"
 	f, err := os.Create(fn)
 	if err != nil {
@@ -62,7 +63,7 @@ func (s *spool) DepositGob(m *message.MessagePack) error {
 func (s *spool) FetchGob(fileName string) (*message.MessagePack, error) {
 	var mp = new(message.MessagePack)
 
-	f, err := os.Open(fileName)
+	f, err := os.Open(s.spoolDir + "/" + fileName)
 	if err != nil {
 		return nil, err
 	}

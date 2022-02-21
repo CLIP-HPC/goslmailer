@@ -22,7 +22,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 	return &c, nil
 }
 
-func (c *Connector) SendMessage(mp *message.MessagePack, l *log.Logger) error {
+func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {
 	var (
 		e         error
 		cmdparams = bytes.Buffer{}
