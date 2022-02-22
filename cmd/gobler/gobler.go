@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -22,11 +23,13 @@ type MsgList []message.MessagePack
 type monitor struct {
 	connector string
 	spoolDir  string
+	monitorT  time.Duration
 }
 
 type picker struct {
 	connector string
 	msgcount  map[string]int
+	pickerT   time.Duration
 }
 
 type sender struct {
@@ -35,21 +38,34 @@ type sender struct {
 	conn      connectors.Connector
 }
 
-func NewPicker(c string) (*picker, error) {
-	var p picker
+func NewPicker(c string, t string) (*picker, error) {
+	var (
+		p   picker
+		err error
+	)
 
 	p.connector = c
 	p.msgcount = map[string]int{}
+	T, err := strconv.ParseUint(t, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	p.pickerT = time.Duration(T)
 
 	return &p, nil
 }
 
-func NewMonitor(c string, s string) (*monitor, error) {
+func NewMonitor(c string, s string, t string) (*monitor, error) {
 	var m monitor
 
 	if s != "" {
 		m.connector = c
 		m.spoolDir = s
+		T, err := strconv.ParseUint(t, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		m.monitorT = time.Duration(T)
 	} else {
 		return nil, errors.New("no spooldir, aborting")
 	}
@@ -109,6 +125,23 @@ func (s *sender) SenderWorker(psCh <-chan *spool.FileGob, psfCh chan<- *spool.Fi
 	return nil
 }
 
+func (p *picker) PickNext(allGobs *spool.SpooledGobs) (*spool.FileGob, error) {
+
+	var nextgob spool.FileGob
+
+	if len(*allGobs) == 0 {
+		return nil, errors.New("no gobs in spool")
+	}
+
+	// here implement something meaningful
+	for _, v := range *allGobs {
+		nextgob = v
+		break
+	}
+
+	return &nextgob, nil
+}
+
 func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool.FileGob, psfCh <-chan *spool.FileGob, wg *sync.WaitGroup, l *log.Logger) error {
 
 	var newgobs *spool.SpooledGobs
@@ -118,8 +151,9 @@ func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool
 
 	l.Println("======================= Picker start ===========================================")
 	// configurable picker/sender frequency
-	ticker := time.Tick(1 * time.Second)
+	ticker := time.Tick(p.pickerT * time.Second)
 	for {
+		l.Printf("PICKER %s: Users msg count %v\n", p.connector, p.msgcount)
 		select {
 		case newgobs = <-mpCh:
 			l.Printf("PICKER %s: Received gobs %#v\n", p.connector, newgobs)
@@ -133,15 +167,16 @@ func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool
 			l.Printf("PICKER %s: Received FAILED gob %#v\n", p.connector, failedGob)
 			// return to allGobs
 			allGobs[failedGob.Filename] = *failedGob
+			p.msgcount[failedGob.User]++
 		default:
 			l.Printf("PICKER %s: allGobs: %#v\n", p.connector, allGobs)
 			// HERE, call the Pick() and Send()
-			for k, v := range allGobs {
-				// pick first, send and delete
-				l.Printf("PICK %s: SEND to Sender: %#v\n", p.connector, v)
-				psCh <- &v
-				delete(allGobs, k)
-				break
+			nextGob, err := p.PickNext(&allGobs)
+			if err == nil {
+				l.Printf("PICKER %s: SEND to Sender: %#v\n", p.connector, nextGob)
+				p.msgcount[nextGob.User]--
+				psCh <- nextGob
+				delete(allGobs, nextGob.Filename)
 			}
 		}
 		<-ticker
@@ -159,10 +194,10 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 
 	defer wg.Done()
 	// configurable monitor timer
-	ticker := time.Tick(10 * time.Second)
+	ticker := time.Tick(m.monitorT * time.Second)
 
 	l.Println("======================= Monitor start ==========================================")
-	l.Printf("MON %s Starting\n", m.connector)
+	l.Printf("MONITOR %s Starting\n", m.connector)
 	sp, err := spool.NewSpool(m.spoolDir)
 	if err != nil {
 		return err
@@ -173,7 +208,7 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 		newList, err = sp.GetSpooledGobsList()
 		lock.Unlock()
 		if err != nil {
-			l.Printf("MON %s: Failed on Getspooledgobslist(), error %s\n", m.connector, err)
+			l.Printf("MONITOR %s: Failed on Getspooledgobslist(), error %s\n", m.connector, err)
 			return err
 		}
 		// iterate over newlist and each file that doesn't exist in old, put into newfiles to be sent to the Picker
@@ -185,7 +220,7 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 				// exists in old, do nothing
 			}
 		}
-		l.Printf("MON %s: Sending newFiles list: %#v\n", m.connector, newFiles)
+		l.Printf("MONITOR %s: Sending newFiles list: %#v\n", m.connector, newFiles)
 		// send new-found files
 		ch <- newFiles
 		// oldlist=newlist
@@ -193,7 +228,7 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 		// empty newfiles for the next iteration
 		newFiles = &spool.SpooledGobs{}
 
-		l.Printf("MON %s: Sleeping.\n", m.connector)
+		l.Printf("MONITOR %s: Sleeping.\n", m.connector)
 		//time.Sleep(5 * time.Second)
 		//l.Printf("Time: %s\n", <-ticker)
 		<-ticker
@@ -211,12 +246,11 @@ func main() {
 		wg      sync.WaitGroup
 	)
 
-	// read configuration
-	// how to handle hardcoding config file?
+	// read gobler configuration
 	cfg := config.NewConfigContainer()
-	err := cfg.GetConfig("/etc/slurm/goslmailer.conf")
+	err := cfg.GetConfig("/etc/slurm/gobler.conf")
 	if err != nil {
-		fmt.Printf("getConfig failed: %s", err)
+		fmt.Printf("getConfig(gobconfig) failed: %s", err)
 		os.Exit(1)
 	}
 
@@ -247,29 +281,27 @@ func main() {
 			// configurable buffer size
 			psChan := make(chan *spool.FileGob, 1)
 			psChanFailed := make(chan *spool.FileGob, 1)
-			mon, err := NewMonitor(con, spd)
+			mon, err := NewMonitor(con, spd, cfg.Connectors[con]["monitorT"])
 			if err != nil {
-				log.Println("Monitor inst failed")
+				log.Printf("Monitor %s inst FAILED\n", con)
 			} else {
-				log.Println("Monitor startup...")
+				log.Printf("Monitor %s startup...\n", con)
 				wg.Add(1)
 				go mon.MonitorWorker(mpChan, &wg, log)
-				log.Println("Monitor exit...")
 			}
-			pickr, err := NewPicker(con)
+			pickr, err := NewPicker(con, cfg.Connectors[con]["pickerT"])
 			if err != nil {
-				log.Println("Picker inst failed")
+				log.Printf("Picker %s inst FAILED\n", con)
 			} else {
-				log.Println("Picker startup...")
+				log.Printf("Picker %s startup...\n", con)
 				wg.Add(1)
 				go pickr.PickerWorker(mpChan, psChan, psChanFailed, &wg, log)
-				log.Println("Monitor exit...")
 			}
 			sendr, err := NewSender(con, cfg.Connectors[con]["spoolDir"], &conns)
 			if err != nil {
-				log.Println("Sender inst failed")
+				log.Printf("Sender %s inst failed\n", con)
 			} else {
-				log.Println("Sender startup...")
+				log.Printf("Sender %s startup...\n", con)
 				wg.Add(1)
 				go sendr.SenderWorker(psChan, psChanFailed, &wg, log)
 				log.Println("Sender exit...")
