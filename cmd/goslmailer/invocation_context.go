@@ -44,13 +44,15 @@ func (ic *invocationContext) dumpReceivers(l *log.Logger) {
 	l.Println("--------------------------------------------------------------------------------")
 }
 
-// populate ic.Receivers (scheme:target) from ic.CmdParams.Other using defCon (defaultconnector) config parameter for undefined schemes
+// generateReceivers populates ic.Receivers (scheme:target) from ic.CmdParams.Other using defCon (defaultconnector) config parameter for undefined schemes
 func (ic *invocationContext) generateReceivers(defCon string, l *log.Logger) {
 	for _, v := range ic.CmdParams.Other {
 		targets := strings.Split(v, ",")
 		for i, t := range targets {
 			targetsSplit := strings.Split(t, ":")
 			l.Printf("generateReceivers: target %d = %#v\n", i, targetsSplit)
+			// todo: needs rework to accept multiple targets in a single receiver; e.g. mailto:x;y;z
+			// also " " cornercase is not handled; add to tests as well
 			switch len(targetsSplit) {
 			case 1:
 				if targetsSplit[0] != "" {

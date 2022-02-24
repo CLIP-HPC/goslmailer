@@ -15,6 +15,8 @@ type monitor struct {
 	monitorT  time.Duration
 }
 
+// NewMonitor creates and initializes a new monitor object with:
+// c connector name, s spooldir location (from config file) and t polling time period.
 func NewMonitor(c string, s string, t time.Duration) (*monitor, error) {
 	var m monitor
 
@@ -36,8 +38,7 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 	newFiles = &spool.SpooledGobs{}
 
 	defer wg.Done()
-	// configurable monitor timer
-	ticker := time.Tick(m.monitorT * time.Second)
+	ticker := time.Tick(m.monitorT)
 
 	l.Println("======================= Monitor start ==========================================")
 	l.Printf("MONITOR %s Starting\n", m.connector)
@@ -71,9 +72,6 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 		// empty newfiles for the next iteration
 		newFiles = &spool.SpooledGobs{}
 
-		//l.Printf("MONITOR %s: Sleeping.\n", m.connector)
-		//time.Sleep(5 * time.Second)
-		//l.Printf("Time: %s\n", <-ticker)
 		<-ticker
 	}
 	l.Printf("Exiting monitor routine %s\n", m.spoolDir)

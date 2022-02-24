@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,53 +13,99 @@ import (
 )
 
 type conMon struct {
-	conn     string
-	spoolDir string
-	monitorT time.Duration
-	pickerT  time.Duration
+	conn           string
+	spoolDir       string
+	monitorT       time.Duration
+	pickerT        time.Duration
+	pickSendBufLen int
+	numSenders     int
 }
 
 const (
-	monitorTdefault = 10
-	pickerTdefault  = 2
+	monitorTdefault   = 10
+	pickerTdefault    = 2
+	psBufLenDefault   = 1
+	numSendersDefault = 1
 )
 
+// getConfTime converts config string to time.Duration value.
+// If string is suffixed with "ms", return miliseconds, else seconds.
+func getConfTime(e string) (time.Duration, error) {
+	var milis bool = false
+
+	if ms := strings.TrimSuffix(e, "ms"); ms != e {
+		milis = true
+		e = ms
+	}
+
+	T, err := strconv.ParseUint(e, 10, 64)
+	if err != nil {
+		return -1 * time.Second, errors.New("problem converting time from config to uint")
+	}
+
+	if milis {
+		return time.Duration(T) * time.Millisecond, nil
+	} else {
+		return time.Duration(T) * time.Second, nil
+	}
+}
+
 func NewConMon(con string, conCfg map[string]string) (*conMon, error) {
-	var cm conMon
+	var (
+		cm  conMon
+		err error
+	)
 
 	cm.conn = con
 	cm.spoolDir = conCfg["spoolDir"]
-	if e, ok := conCfg["monitorT"]; ok {
-		T, err := strconv.ParseUint(e, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		cm.monitorT = time.Duration(T)
-	} else {
-		cm.monitorT = time.Duration(monitorTdefault)
+
+	psbl, err := strconv.Atoi(conCfg["psBufLen"])
+	if err != nil {
+		// return nil, errors.New("psBufLen is not integer")
+		// todo: no need to be so agressive, let's do default... or should we abort so the user knows he made a mistake?
+		psbl = psBufLenDefault
 	}
-	if e, ok := conCfg["pickerT"]; ok {
-		T, err := strconv.ParseUint(e, 10, 64)
+	cm.pickSendBufLen = psbl
+
+	ns, err := strconv.Atoi(conCfg["numSenders"])
+	if err != nil {
+		//return nil, errors.New("numSenders is not integer")
+		cm.numSenders = psBufLenDefault
+	}
+	cm.numSenders = ns
+
+	// if monitorT is specified...
+	if e, ok := conCfg["monitorT"]; ok {
+		cm.monitorT, err = getConfTime(e)
 		if err != nil {
 			return nil, err
 		}
-		cm.pickerT = time.Duration(T)
 	} else {
-		cm.pickerT = time.Duration(pickerTdefault)
+		// nothing specified in config, use default seconds
+		cm.monitorT = time.Duration(monitorTdefault) * time.Second
+	}
+
+	// if pickerT is specified...
+	if e, ok := conCfg["pickerT"]; ok {
+		cm.pickerT, err = getConfTime(e)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// nothing specified in config, use default seconds
+		cm.pickerT = time.Duration(pickerTdefault) * time.Second
 	}
 
 	return &cm, nil
 }
 
-// SpinUp start 3 goroutines: monitor, picker and sender for a connector (has "spoolDir" attribute in .conf)
+// SpinUp start 3 goroutines: monitor, picker and sender for a connector (each that has "spoolDir" attribute in .conf)
 func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *log.Logger) error {
 
 	mpChan := make(chan *spool.SpooledGobs, 1)
-	// make configurable buffer size
-	psChan := make(chan *spool.FileGob, 1)
-	psChanFailed := make(chan *spool.FileGob, 1)
+	psChan := make(chan *spool.FileGob, cm.pickSendBufLen)
+	psChanFailed := make(chan *spool.FileGob, cm.pickSendBufLen)
 
-	// spin-up
 	mon, err := NewMonitor(cm.conn, cm.spoolDir, cm.monitorT)
 	if err != nil {
 		log.Printf("Monitor %s inst FAILED\n", cm.conn)
@@ -66,6 +114,7 @@ func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *l
 		wg.Add(1)
 		go mon.MonitorWorker(mpChan, wg, log)
 	}
+
 	pickr, err := NewPicker(cm.conn, cm.pickerT)
 	if err != nil {
 		log.Printf("Picker %s inst FAILED\n", cm.conn)
@@ -74,14 +123,16 @@ func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *l
 		wg.Add(1)
 		go pickr.PickerWorker(mpChan, psChan, psChanFailed, wg, log)
 	}
-	sendr, err := NewSender(cm.conn, cm.spoolDir, &conns)
-	if err != nil {
-		log.Printf("Sender %s inst failed\n", cm.conn)
-	} else {
-		log.Printf("Sender %s startup...\n", cm.conn)
-		wg.Add(1)
-		go sendr.SenderWorker(psChan, psChanFailed, wg, log)
-		log.Println("Sender exit...")
+
+	for i := 1; i <= cm.numSenders; i++ {
+		sendr, err := NewSender(cm.conn, cm.spoolDir, &conns, i)
+		if err != nil {
+			log.Printf("Sender %d - %s inst failed\n", i, cm.conn)
+		} else {
+			log.Printf("Sender %d - %s startup...\n", i, cm.conn)
+			wg.Add(1)
+			go sendr.SenderWorker(psChan, psChanFailed, wg, log)
+		}
 	}
 
 	return nil

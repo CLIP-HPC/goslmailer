@@ -57,11 +57,13 @@ func main() {
 	for con := range cfg.Connectors {
 		spd, ok := cfg.Connectors[con]["spoolDir"]
 		if ok {
-			log.Printf("MAIN: spoolDir exists: %s - %s\n", cfg.Connectors[con]["spoolDir"], spd)
+			log.Printf("MAIN: %s spoolDir exists: %s - %s\n", con, cfg.Connectors[con]["spoolDir"], spd)
 
 			cm, err := NewConMon(con, cfg.Connectors[con])
 			if err != nil {
 				log.Printf("MAIN: NewConMon(%s) failed with: %s\n", con, err)
+				log.Printf("MAIN: skipping %s...\n", con)
+				continue
 			}
 			// func (cm *conMon) SpinUp(conns connectors.Connectors, wg sync.WaitGroup, log *log.Logger) error {
 			err = cm.SpinUp(conns, &wg, log)

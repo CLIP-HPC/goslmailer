@@ -14,6 +14,7 @@ type spool struct {
 	spoolDir string
 }
 
+// DepositToSpool is a wrapper around spool.NewSpool and *spool.DepositGob
 func DepositToSpool(dir string, m *message.MessagePack) error {
 
 	s, err := NewSpool(dir)
@@ -36,13 +37,14 @@ func NewSpool(dir string) (*spool, error) {
 		return nil, err
 	case !fi.IsDir():
 		return nil, errors.New("ERROR: Gob directory is not a directory")
+		// todo: missing writability test
 	}
 	gd.spoolDir = dir
 	return gd, nil
 }
 
 func (s *spool) DepositGob(m *message.MessagePack) error {
-	// replace with a function
+	// todo: replace with a function
 	fn := s.spoolDir + "/" + m.Connector + "-" + m.TargetUser + "-" + strconv.FormatInt(m.TimeStamp.UnixNano(), 10) + ".gob"
 	f, err := os.Create(fn)
 	if err != nil {
@@ -55,6 +57,7 @@ func (s *spool) DepositGob(m *message.MessagePack) error {
 		fmt.Println(err)
 		return err
 	}
+	// todo: proper logging
 	fmt.Println("Deposit gob OK!")
 
 	return nil
@@ -71,9 +74,11 @@ func (s *spool) FetchGob(fileName string) (*message.MessagePack, error) {
 	genc := gob.NewDecoder(f)
 	err = genc.Decode(mp)
 	if err != nil {
+		// todo: logging
 		fmt.Println(err)
 		return nil, err
 	}
+	// todo: logging
 	fmt.Printf("Fetch gob OK! Gob timestamp: %s\n", mp.TimeStamp.String())
 
 	return mp, nil

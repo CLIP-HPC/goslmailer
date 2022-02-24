@@ -9,12 +9,15 @@ import (
 	"github.com/pja237/goslmailer/internal/spool"
 )
 
+// picker holds connector name string, msgcount map with {username:SpooledGobsCount} and pickerT polling period
 type picker struct {
 	connector string
-	msgcount  map[string]int
+	msgcount  map[string]int // map holding {username:SpooledGobsCount}
 	pickerT   time.Duration
 }
 
+// NewPicker creates and initializes a new picker object with:
+// c connector name and t polling time period parameters.
 func NewPicker(c string, t time.Duration) (*picker, error) {
 	var p picker
 
@@ -33,7 +36,7 @@ func (p *picker) PickNext(allGobs *spool.SpooledGobs) (*spool.FileGob, error) {
 		return nil, errors.New("no gobs in spool")
 	}
 
-	// here implement something meaningful
+	// todo: here implement something meaningful
 	for _, v := range *allGobs {
 		nextgob = v
 		break
@@ -50,8 +53,7 @@ func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool
 	defer wg.Done()
 
 	l.Println("======================= Picker start ===========================================")
-	// configurable picker/sender frequency
-	ticker := time.Tick(p.pickerT * time.Second)
+	ticker := time.Tick(p.pickerT)
 	for {
 		l.Printf("PICKER %s: Users msg count %v\n", p.connector, p.msgcount)
 		select {
@@ -68,8 +70,11 @@ func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool
 			// return to allGobs
 			allGobs[failedGob.Filename] = *failedGob
 			p.msgcount[failedGob.User]++
-		default:
-			l.Printf("PICKER %s: allGobs: %#v\n", p.connector, allGobs)
+		case <-ticker:
+			l.Printf("PICKER %s: Chan status: mpCh = %d msgs psCh = %d / %d msgs, psfCh = %d / %d msgs \n", p.connector, len(mpCh), len(psCh), cap(psCh), len(psfCh), cap(psfCh))
+		}
+		if len(psCh) < cap(psCh) {
+			//l.Printf("PICKER %s: allGobs: %#v\n", p.connector, allGobs)
 			// HERE, call the Pick() and Send()
 			nextGob, err := p.PickNext(&allGobs)
 			if err == nil {
@@ -78,8 +83,9 @@ func (p *picker) PickerWorker(mpCh <-chan *spool.SpooledGobs, psCh chan<- *spool
 				psCh <- nextGob
 				delete(allGobs, nextGob.Filename)
 			}
+		} else {
+			l.Printf("psCh FULL!\n")
 		}
-		<-ticker
 	}
 
 	l.Println("======================= Picker end =============================================")

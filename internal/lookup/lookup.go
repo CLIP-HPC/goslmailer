@@ -8,7 +8,7 @@ import (
 
 func ExtLookupUser(user string, lookup string) (u string) {
 
-	// this whole package needs some love, specially regarding error handling
+	// todo: this whole package needs some love, quite some love
 	switch lookup {
 	case "GECOS":
 		u = lookupGECOS(user)
