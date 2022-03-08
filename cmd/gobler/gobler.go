@@ -59,7 +59,7 @@ func main() {
 		if ok {
 			log.Printf("MAIN: %s spoolDir exists: %s - %s\n", con, cfg.Connectors[con]["spoolDir"], spd)
 
-			cm, err := NewConMon(con, cfg.Connectors[con])
+			cm, err := NewConMon(con, cfg.Connectors[con], log)
 			if err != nil {
 				log.Printf("MAIN: NewConMon(%s) failed with: %s\n", con, err)
 				log.Printf("MAIN: skipping %s...\n", con)

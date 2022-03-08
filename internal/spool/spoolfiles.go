@@ -1,7 +1,7 @@
 package spool
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -18,7 +18,7 @@ type FileGob struct {
 //type SpooledGobs map[filename]FileGob
 type SpooledGobs map[string]FileGob
 
-func (s *spool) GetSpooledGobsList() (*SpooledGobs, error) {
+func (s *spool) GetSpooledGobsList(l *log.Logger) (*SpooledGobs, error) {
 	var sg SpooledGobs = SpooledGobs{}
 
 	de, err := os.ReadDir(s.spoolDir)
@@ -26,13 +26,12 @@ func (s *spool) GetSpooledGobsList() (*SpooledGobs, error) {
 		return nil, err
 	}
 	for _, v := range de {
-		//fmt.Printf("FILE: %q is regular file: %v\n", v.Name(), v.Type().IsRegular())
+		//l.Printf("FILE: %q is regular file: %v\n", v.Name(), v.Type().IsRegular())
 		if v.Type().IsRegular() && strings.HasSuffix(v.Name(), ".gob") {
-			//fmt.Printf("FILE: %q is a GOB\n", v.Name())
-			mp, err := s.FetchGob(v.Name())
+			//l.Printf("FILE: %q is a GOB\n", v.Name())
+			mp, err := s.FetchGob(v.Name(), l)
 			if err != nil {
-				// todo: logging
-				fmt.Printf("FAILED to read %q gob file: %s\n", v.Name(), err)
+				l.Printf("FAILED to read %q gob file: %s\n", v.Name(), err)
 			} else {
 				sg[v.Name()] = FileGob{
 					Filename:  v.Name(),
@@ -43,11 +42,6 @@ func (s *spool) GetSpooledGobsList() (*SpooledGobs, error) {
 			}
 
 		}
-	}
-	// todo: remove this, was used in devlopment, or use logging, or not, too much info
-	for _, v := range sg {
-		// todo: logging
-		fmt.Printf("FILE: %q\n", v.Filename)
 	}
 	return &sg, nil
 }

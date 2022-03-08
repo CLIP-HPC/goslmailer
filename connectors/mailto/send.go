@@ -2,8 +2,10 @@ package mailto
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"os/exec"
+	"regexp"
 	"text/template"
 
 	"github.com/pja237/goslmailer/internal/message"
@@ -38,6 +40,19 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	// todo:
 	// - call lookup on targetUserId
 	// - test if in allowList/blockList
+	// - implement useSpool mechanics for gobler
+
+	// allowList
+	re, err := regexp.Compile(c.allowList)
+	if err != nil {
+		return err
+	}
+	if !re.Match([]byte(mp.TargetUser)) {
+		// not in allowList
+		return errors.New("not allowed to send mail to user")
+	}
+
+	// send:
 	cmd := exec.Command(c.mailCmd, cmdparams.String(), mp.TargetUser)
 	//cmd.Stdin = bytes.NewBuffer([]byte{0x04})
 	out, e := cmd.Output()

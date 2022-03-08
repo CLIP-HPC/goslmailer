@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -63,7 +64,7 @@ func (s *spool) DepositGob(m *message.MessagePack) error {
 	return nil
 }
 
-func (s *spool) FetchGob(fileName string) (*message.MessagePack, error) {
+func (s *spool) FetchGob(fileName string, l *log.Logger) (*message.MessagePack, error) {
 	var mp = new(message.MessagePack)
 
 	f, err := os.Open(s.spoolDir + "/" + fileName)
@@ -74,12 +75,10 @@ func (s *spool) FetchGob(fileName string) (*message.MessagePack, error) {
 	genc := gob.NewDecoder(f)
 	err = genc.Decode(mp)
 	if err != nil {
-		// todo: logging
-		fmt.Println(err)
+		l.Println(err)
 		return nil, err
 	}
-	// todo: logging
-	fmt.Printf("Fetch gob OK! Gob timestamp: %s\n", mp.TimeStamp.String())
+	//l.Printf("Fetch gob OK! Gob timestamp: %s\n", mp.TimeStamp.String())
 
 	return mp, nil
 }

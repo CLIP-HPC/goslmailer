@@ -43,7 +43,7 @@ func (s *sender) SenderWorker(psCh <-chan *spool.FileGob, psfCh chan<- *spool.Fi
 			l.Printf("SENDER %s#%d: newspool returned error %s\n", s.connector, s.num, err)
 			continue
 		}
-		mp, err := sd.FetchGob(msg.Filename)
+		mp, err := sd.FetchGob(msg.Filename, l)
 		if err != nil {
 			l.Printf("SENDER %s#%d: fetchgob returned error %s\n", s.connector, s.num, err)
 			continue
@@ -60,9 +60,11 @@ func (s *sender) SenderWorker(psCh <-chan *spool.FileGob, psfCh chan<- *spool.Fi
 			err = os.Remove(s.spoolDir + "/" + msg.Filename)
 			if err != nil {
 				l.Printf("SENDER %s#%d: error removing file %s\n", s.connector, s.num, err)
+				// todo: unlock and return error? or leave this logged and proceed?
+			} else {
+				l.Printf("SENDER %s#%d: Gob deleted\n", s.connector, s.num)
 			}
 			lock.Unlock()
-			l.Printf("SENDER %s#: Gob deleted\n", s.connector)
 		}
 	}
 	l.Println("======================= Sender end =============================================")

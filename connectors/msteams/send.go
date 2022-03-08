@@ -12,7 +12,7 @@ import (
 	"text/template"
 	"time"
 
-        "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/pja237/goslmailer/internal/lookup"
 	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/slurmjob"
@@ -42,24 +42,24 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 func (c *Connector) msteamsRenderCardTemplate(j *slurmjob.JobContext, userid string, buf *bytes.Buffer) error {
 
 	var x = struct {
-                Job     slurmjob.JobContext
-                UserID  string
-                Created string
+		Job     slurmjob.JobContext
+		UserID  string
+		Created string
 	}{
 		*j,
 		userid,
-                fmt.Sprint(time.Now().Format("Mon, 2 Jan 2006 15:04:05 MST")),
-        }
+		fmt.Sprint(time.Now().Format("Mon, 2 Jan 2006 15:04:05 MST")),
+	}
 
-        var funcMap = template.FuncMap{
-                "humanBytes": humanize.Bytes,
+	var funcMap = template.FuncMap{
+		"humanBytes": humanize.Bytes,
 	}
 
 	f, err := os.ReadFile(c.adaptiveCardTemplate)
 	if err != nil {
 		return err
 	}
-        t := template.Must(template.New("AdaptiveCard").Funcs(funcMap).Parse(string(f)))
+	t := template.Must(template.New("AdaptiveCard").Funcs(funcMap).Parse(string(f)))
 	err = t.Execute(buf, x)
 	if err != nil {
 		return err
