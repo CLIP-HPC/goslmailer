@@ -58,11 +58,11 @@ func main() {
 
 	// get job statistics based on the SLURM_JOB_ID from slurmEnv struct
 	// only if job is END or FAIL(?)
-	job.GetJobStats()
+	job.GetJobStats(log)
 
 	// generate hints based on SlurmEnv and JobStats (e.g. "too much memory requested" or "walltime << requested queue")
 	// only if job is END or fail(?)
-	job.GenerateHints()
+	job.GenerateHints(cfg.QosMap)
 
 	// populate map with configured referenced connectors
 	conns.PopulateConnectors(cfg, log)

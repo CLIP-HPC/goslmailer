@@ -31,12 +31,8 @@ type SlurmEnvironment struct {
 	SLURM_JOB_WORK_DIR      string
 }
 
-type JobStats struct {
-	MemReq, MemUsed int64
-}
-
 type JobContext struct {
 	SlurmEnvironment
-	JobStats
-	Hints []string
+        JobStats SacctMetrics
+        Hints    []string
 }

@@ -10,6 +10,7 @@ type ConfigContainer struct {
 	Logfile          string                       `json:"logfile"`
 	DefaultConnector string                       `json:"defaultconnector"`
 	Connectors       map[string]map[string]string `json:"connectors"`
+	QosMap           map[uint64]string            `json:"qosmap"`
 }
 
 func NewConfigContainer() *ConfigContainer {

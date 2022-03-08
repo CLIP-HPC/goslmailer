@@ -62,7 +62,7 @@ func (s *sender) SenderWorker(psCh <-chan *spool.FileGob, psfCh chan<- *spool.Fi
 				l.Printf("SENDER %s#%d: error removing file %s\n", s.connector, s.num, err)
 			}
 			lock.Unlock()
-			l.Printf("SENDER %s#%d: Gob deleted\n", s.connector)
+			l.Printf("SENDER %s#: Gob deleted\n", s.connector)
 		}
 	}
 	l.Println("======================= Sender end =============================================")
