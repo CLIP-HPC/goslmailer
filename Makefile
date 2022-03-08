@@ -6,6 +6,7 @@
 
 bindirs=$(wildcard ./cmd/*)
 bins=$(notdir $(bindirs))
+# can be replaced with go test ./... construct
 testdirs=$(sort $(dir $(shell find ./ -name *_test.go)))
 
 all: list test build
@@ -32,17 +33,11 @@ build:
 test_new:
 	$(foreach dir, $(testdirs), go test -v -count=1 $(dir) || exit $$?;)
 
-test: $(testdirs)
+test:
 	@echo "********************************************************************************"
-	@echo Testing $(testdirs)
+	@echo Testing
 	@echo "********************************************************************************"
-	for i in $(testdirs)
-	do
-		echo "................................................................................"
-		echo "--> Now testing: $$i"
-		echo "................................................................................"
-		go test -v -count=1 $$i || exit $$?
-	done
+	go test -v -count=1 ./...
 
 clean:
-	rm ./goslmailer
+	rm $(bins)

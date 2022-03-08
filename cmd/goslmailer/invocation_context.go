@@ -44,36 +44,41 @@ func (ic *invocationContext) dumpReceivers(l *log.Logger) {
 	l.Println("--------------------------------------------------------------------------------")
 }
 
-// populate ic.Receivers (scheme:target) from ic.CmdParams.Other using defCon (defaultconnector) config parameter for undefined schemes
+// generateReceivers populates ic.Receivers (scheme:target) from ic.CmdParams.Other using defCon (defaultconnector) config parameter for undefined schemes
 func (ic *invocationContext) generateReceivers(defCon string, l *log.Logger) {
 	for _, v := range ic.CmdParams.Other {
 		targets := strings.Split(v, ",")
 		for i, t := range targets {
 			targetsSplit := strings.Split(t, ":")
 			l.Printf("generateReceivers: target %d = %#v\n", i, targetsSplit)
+			// todo: needs rework to accept multiple targets in a single receiver; e.g. mailto:x;y;z
+			// also " " cornercase is not handled; add to tests as well
 			switch len(targetsSplit) {
-			// todo: move the lookup part of the code to the connectors, and allow every connector to specify its lookup function
 			case 1:
-				ic.Receivers = append(ic.Receivers, struct {
-					scheme string
-					target string
-				}{
-					// receivers with unspecified connector scheme get global config key "DefaultConnector" set here:
-					scheme: defCon,
-					// Lookup is now moved to connector package, remove comment later.
-					//target: lookup.ExtLookupUser(targetsSplit[0], defCon),
-					target: targetsSplit[0],
-				})
+				if targetsSplit[0] != "" {
+					ic.Receivers = append(ic.Receivers, struct {
+						scheme string
+						target string
+					}{
+						// receivers with unspecified connector scheme get global config key "DefaultConnector" set here:
+						scheme: defCon,
+						target: targetsSplit[0],
+					})
+				} else {
+					l.Printf("generateReceivers: target %d = %#v is an empty receiver, ignoring!\n", i, targetsSplit)
+				}
 			case 2:
-				ic.Receivers = append(ic.Receivers, struct {
-					scheme string
-					target string
-				}{
-					scheme: targetsSplit[0],
-					// Lookup is now moved to connector package, remove comment later.
-					//target: lookup.ExtLookupUser(targetsSplit[1], targetsSplit[0]),
-					target: targetsSplit[1],
-				})
+				if targetsSplit[1] != "" && targetsSplit[0] != "" {
+					ic.Receivers = append(ic.Receivers, struct {
+						scheme string
+						target string
+					}{
+						scheme: targetsSplit[0],
+						target: targetsSplit[1],
+					})
+				} else {
+					l.Printf("generateReceivers: target %d = %#v is an empty receiver, ignoring!\n", i, targetsSplit)
+				}
 			default:
 				l.Printf("generateReceivers: IGNORING! unrecognized target string: %s\n", t)
 			}

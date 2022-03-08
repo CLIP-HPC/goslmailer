@@ -27,4 +27,6 @@ jobs:
       uses: actions/upload-artifact@v2.3.1
       with:
         name: goslmailer-${{ github.ref_name }}
-        path: goslmailer
+        path: |
+          goslmailer
+          gobler
