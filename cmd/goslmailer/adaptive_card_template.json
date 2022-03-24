@@ -52,6 +52,17 @@
               }
             ]
           },
+          {{ if ne .Job.PrunedMessageCount 0 }}
+          {
+            "type":"TextBlock",
+            "size":"medium",
+            "weight":"bolder",
+            "text":"WARNING: Rate limiting triggered. {{ .Job.PrunedMessageCount }} additonal notificiations have been suppressed",
+            "style":"heading",
+            "wrap":true,
+            "color":"Attention"
+          },
+          { end }}
           {
             "type":"FactSet",
             "separator":true,
