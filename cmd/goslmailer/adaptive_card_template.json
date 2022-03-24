@@ -34,7 +34,7 @@
                   {
                     "type":"TextBlock",
                     "weight":"bolder",
-                    "text":"Job {{ .Job.SlurmEnvironment.SLURM_JOB_ID }} {{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}",
+                    "text":"{{ .Job.MailSubject }} {{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}",
                     "wrap":true,
                     "size":"Large",
                     {{ if or (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "FAILED") (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "TIMEOUT") ((eq .Job.SlurmEnvironment.SLURM_JOB_STATE "OUT_OF_MEMORY")) }}"color":"Attention"{{ else }}"color":"Good"{{ end }}
