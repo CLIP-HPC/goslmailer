@@ -62,7 +62,7 @@
             "wrap":true,
             "color":"Attention"
           },
-          { end }}
+          {{ end }}
           {
             "type":"FactSet",
             "separator":true,
