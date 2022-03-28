@@ -84,6 +84,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		e       error = nil
 		outFile string
 		dts     bool = false // DumpToSpool
+		buffer  bytes.Buffer
 	)
 
 	l.Println("................... sendToMSTeams START ........................................")
@@ -92,36 +93,43 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	enduser := lookup.ExtLookupUser(mp.TargetUser, c.useLookup)
 	l.Printf("Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
 
-	// prepare outfile name
-	t := strconv.FormatInt(time.Now().UnixNano(), 10)
-	l.Printf("MsTeams time: %s\n", t)
-	outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
-
 	l.Printf("MsTeams sending to targetUserID: %s\n", enduser)
 
 	// debug purposes
 	c.dumpConnector(l)
 
-	// buffer to place rendered json in
-	buffer := bytes.Buffer{}
-	err := c.msteamsRenderCardTemplate(mp.JobContext, enduser, &buffer)
-	if err != nil {
-		return err
+	// don't render template when using spool
+	if c.renderToFile != "spool" {
+		// buffer to place rendered json in
+		buffer = bytes.Buffer{}
+		err := c.msteamsRenderCardTemplate(mp.JobContext, enduser, &buffer)
+		if err != nil {
+			return err
+		}
 	}
 
 	// this can be: "yes", "spool", anythingelse
 	switch c.renderToFile {
 	case "yes":
-		// render json template to working directory - debug purposes
+		// render json template to a file in working directory - debug purposes
+
+		// prepare outfile name
+		t := strconv.FormatInt(time.Now().UnixNano(), 10)
+		l.Printf("MsTeams time: %s\n", t)
+		outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
 		res, err := io.ReadAll(&buffer)
-		// test err and do something!
-		e = err
-		os.WriteFile(outFile, res, 0644)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(outFile, res, 0644)
+		if err != nil {
+			return err
+		}
 		l.Printf("MsTeams send to file: %s\n", outFile)
 	case "spool":
 		// deposit GOB to spoolDir if allowed
 		if useSpool {
-			err = spool.DepositToSpool(c.spoolDir, mp)
+			err := spool.DepositToSpool(c.spoolDir, mp)
 			if err != nil {
 				l.Printf("DepositToSpool Failed!\n")
 				return err
@@ -147,10 +155,10 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		}
 	}
 
-	// either http.Post failed, or it got 429, backing off to spool
+	// either http.Post failed, or it got 429, save mp to spool if we're allowed (not allowed when called from gobler, to prevent gobs multiplying)
 	if dts && useSpool {
 		l.Printf("Backing off to spool.\n")
-		err = spool.DepositToSpool(c.spoolDir, mp)
+		err := spool.DepositToSpool(c.spoolDir, mp)
 		if err != nil {
 			l.Printf("DepositToSpool Failed!\n")
 			return err

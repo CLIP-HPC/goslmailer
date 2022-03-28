@@ -30,6 +30,11 @@ const (
 	maxMsgPUDefault   = 10
 )
 
+type psGob struct {
+	fileGob      *spool.FileGob
+	deletedCount uint32
+}
+
 // getConfTime converts config string to time.Duration value.
 // If string is suffixed with "ms", return miliseconds, else seconds.
 func getConfTime(e string) (time.Duration, error) {
@@ -115,10 +120,10 @@ func NewConMon(con string, conCfg map[string]string, l *log.Logger) (*conMon, er
 func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *log.Logger) error {
 
 	mpChan := make(chan *spool.SpooledGobs, 1)
-	psChan := make(chan *spool.FileGob, cm.pickSendBufLen)
-	psChanFailed := make(chan *spool.FileGob, cm.pickSendBufLen)
+	psChan := make(chan psGob, cm.pickSendBufLen)
+	psChanFailed := make(chan psGob, cm.pickSendBufLen)
 
-	mon, err := NewMonitor(cm.conn, cm.spoolDir, cm.monitorT, cm.maxMsgPU)
+	mon, err := NewMonitor(cm.conn, cm.spoolDir, cm.monitorT)
 	if err != nil {
 		log.Printf("Monitor %s inst FAILED\n", cm.conn)
 	} else {

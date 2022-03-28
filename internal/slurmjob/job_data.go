@@ -33,8 +33,8 @@ type SlurmEnvironment struct {
 
 type JobContext struct {
 	SlurmEnvironment
-        JobStats           SacctMetrics
-        Hints              []string
-        MailSubject        string
-        PrunedMessageCount uint32
+	JobStats           SacctMetrics
+	Hints              []string
+	MailSubject        string
+	PrunedMessageCount uint32
 }

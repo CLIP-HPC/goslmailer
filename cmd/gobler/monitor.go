@@ -13,48 +13,23 @@ type monitor struct {
 	connector string
 	spoolDir  string
 	monitorT  time.Duration
-	maxMsgPU  int
 }
 
 // NewMonitor creates and initializes a new monitor object with:
-// c connector name, s spooldir location (from config file), t polling time period and mpu is MaximumMessagesPerUser (from conf.)
-func NewMonitor(c string, s string, t time.Duration, mpu int) (*monitor, error) {
+// c connector name, s spooldir location (from config file), t polling time period
+func NewMonitor(c string, s string, t time.Duration) (*monitor, error) {
 	var m monitor
 
 	if s != "" {
 		m.connector = c
 		m.spoolDir = s
 		m.monitorT = t
-		m.maxMsgPU = mpu
 	} else {
 		return nil, errors.New("no spooldir, aborting")
 	}
 
 	return &m, nil
 }
-
-// if trimming logic works ok from picker, remove this and also remove maxMsgPU from monitor struct...
-//
-//func (m *monitor) trimExcessiveMsgs(newFiles *spool.SpooledGobs, mpu int, l *log.Logger) error {
-//	uc := make(map[string]int)
-//
-//	for f, fg := range *newFiles {
-//		uc[fg.User]++
-//		if uc[fg.User] > mpu {
-//			lock.Lock()
-//			err := os.Remove(m.spoolDir + "/" + fg.Filename)
-//			if err != nil {
-//				l.Printf("MONITOR %s: error removing file %s\n", m.connector, err)
-//			}
-//			lock.Unlock()
-//			l.Printf("MONITOR %s: Gob %s deleted\n", m.connector, f)
-//			uc[fg.User]--
-//			delete(*newFiles, f)
-//		}
-//	}
-//	l.Printf("UserCount map == %#v\n", uc)
-//	return nil
-//}
 
 func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup, l *log.Logger) error {
 
@@ -85,13 +60,8 @@ func (m *monitor) MonitorWorker(ch chan<- *spool.SpooledGobs, wg *sync.WaitGroup
 			if _, ok := (*oldList)[k]; !ok {
 				// doesn't
 				(*newFiles)[k] = v
-			} else {
-				// exists in old, do nothing
 			}
 		}
-
-		// todo: decide if here we do the purge of newFiles for messages above maxMsgPU, or in picker?
-		//m.trimExcessiveMsgs(newFiles, m.maxMsgPU, l)
 
 		// send new-found files
 		l.Printf("MONITOR %s: Sent %d gobs\n", m.connector, len(*newFiles))
