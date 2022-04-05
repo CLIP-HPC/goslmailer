@@ -4,7 +4,7 @@
 
 ## Description
 
-Goslmailer (GoSlurmMailer) is a drop-in replacement [MailProg](https://slurm.schedmd.com/slurm.conf.html#OPT_MailProg) for [slurm](https://slurm.schedmd.com/).
+**Goslmailer** (GoSlurmMailer) is a drop-in replacement [MailProg](https://slurm.schedmd.com/slurm.conf.html#OPT_MailProg) for [slurm](https://slurm.schedmd.com/).
 
 
 With goslmailer configured as as the slurm mailer, 
@@ -23,7 +23,38 @@ sbatch --mail-type=ALL --mail-user="mailto:useremail,msteams:username,username"
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
 
-### Currently supported receiver schemes:
+
+## Spooling and throttling of messages - gobler service
+
+In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive. 
+For these environments goslmailer can be configured to spool messages from certain connectors on disk, to be later processed by the **gobler** service.
+
+
+**gobler** is a daemon program that can be [configured](cmd/gobler/gobler.conf) to monitor specific spool directories for messages, process them and send out using the same connectors as goslmailer.
+
+
+On startup, gobler reads its config file and spins-up a `connector monitor` for each configured spool directory.
+
+
+`connector monitor` in turn spins up 3 goroutines: `monitor`, `picker` and `numSenders` x `sender`.
+
+* **monitor** : 
+  * every `monitorT` seconds (or miliseconds) scans the `spoolDir` for new messages and sends them to the **picker**
+
+* **picker**  :
+  * on receipt of new messages performs *trimming* of excessive messages, limiting the number of users messages in the system to `maxMsgPU`
+  * every `pickerT` seconds (or miliseconds) picks the next message to be delivered and sends it to the **sender** (ordering by time of arrival)
+
+* **sender**  :
+  * `numSenders` goroutines are waiting for messages from the **picker** and try to deliver them. In case of failure, messages are returned to the **picker** for a later retry
+
+
+## Artistic sketch of the system described above
+
+![Sketch of the architecture](./archSketch.png)
+
+
+## Currently supported receiver schemes:
 
 * msteams webhook --mail-user=`msteams:`userid
 * mailto --mail-user=`mailto:`email-addr
