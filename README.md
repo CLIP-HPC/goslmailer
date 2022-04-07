@@ -23,6 +23,13 @@ sbatch --mail-type=ALL --mail-user="mailto:useremail,msteams:username,username"
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
 
+## Currently available connectors:
+
+* **msteams** webhook --mail-user=`msteams:`userid
+* **telegram** bot --mail-user=`telegram:`chatId
+* **mailto** --mail-user=`mailto:`email-addr
+
+MoreToBeWritten...
 
 ## Spooling and throttling of messages - gobler service
 
@@ -53,13 +60,6 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 ![Sketch of the architecture](./archSketch.png)
 
-
-## Currently supported receiver schemes:
-
-* msteams webhook --mail-user=`msteams:`userid
-* mailto --mail-user=`mailto:`email-addr
-
-MoreToBeWritten...
 
 ## Connectors
 
