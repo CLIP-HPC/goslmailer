@@ -5,6 +5,7 @@ import (
 
 	"github.com/pja237/goslmailer/connectors/mailto"
 	"github.com/pja237/goslmailer/connectors/msteams"
+	"github.com/pja237/goslmailer/connectors/telegram"
 	"github.com/pja237/goslmailer/internal/config"
 	"github.com/pja237/goslmailer/internal/message"
 )
@@ -35,6 +36,16 @@ func (c *Connectors) PopulateConnectors(conf *config.ConfigContainer, l *log.Log
 		case "msteams":
 			// For each recognized, call the connectorpkg.NewConnector() and...
 			con, err := msteams.NewConnector(v)
+			if err != nil {
+				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
+				break
+			}
+			l.Printf("%s connector configured.\n", k)
+			// ...asign its return object value to the connectors map.
+			(*c)[k] = con
+		case "telegram":
+			// For each recognized, call the connectorpkg.NewConnector() and...
+			con, err := telegram.NewConnector(v)
 			if err != nil {
 				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
 				break
