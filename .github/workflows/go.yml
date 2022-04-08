@@ -22,9 +22,9 @@ jobs:
 
     - name: Install
       run: make install -e version=${{ github.ref_name }}
-      
+
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1
       with:
         name: goslmailer-${{ github.ref_name }}
-        path: goslmailer-${{ github.ref_name }}/
+        path: build/goslmailer-${{ github.ref_name }}/

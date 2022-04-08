@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+        htmltemplate "html/template"
 	"io"
 	"log"
 	"os"
 	"strconv"
-	"text/template"
+        texttemplate "text/template"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -29,6 +30,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		spoolDir:        conf["spoolDir"],
 		messageTemplate: conf["messageTemplate"],
 		useLookup:       conf["useLookup"],
+                format:          conf["format"],
 	}
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	switch c.renderToFile {
@@ -51,17 +53,23 @@ func (c *Connector) telegramRenderTemplate(j *slurmjob.JobContext, userid string
 		userid,
 		fmt.Sprint(time.Now().Format("Mon, 2 Jan 2006 15:04:05 MST")),
 	}
-
-	var funcMap = template.FuncMap{
-		"humanBytes": humanize.Bytes,
-	}
-
 	f, err := os.ReadFile(c.messageTemplate)
 	if err != nil {
 		return err
 	}
-	t := template.Must(template.New("TelegramMD").Funcs(funcMap).Parse(string(f)))
-	err = t.Execute(buf, x)
+        if c.format == "HTML" {
+                var funcMap = htmltemplate.FuncMap{
+                        "humanBytes": humanize.Bytes,
+                }
+                t := htmltemplate.Must(htmltemplate.New("TelegramMD").Funcs(funcMap).Parse(string(f)))
+                err = t.Execute(buf, x)
+        } else {
+                var funcMap = texttemplate.FuncMap{
+                        "humanBytes": humanize.Bytes,
+                }
+                t := texttemplate.Must(texttemplate.New("TelegramMD").Funcs(funcMap).Parse(string(f)))
+                err = t.Execute(buf, x)
+        }
 	if err != nil {
 		return err
 	}
@@ -163,7 +171,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		}
 	default:
 		//https://core.telegram.org/bots/api#formatting-options
-		msg, err := tb.Send(chat, buffer.String(), "MarkdownV2")
+                msg, err := tb.Send(chat, buffer.String(), c.format)
 		if err != nil {
 			l.Printf("bot.Send() Failed: %s\n", err)
 			dts = true

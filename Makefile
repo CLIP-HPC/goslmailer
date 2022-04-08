@@ -1,7 +1,7 @@
 .PHONY: clean build test test_new list all
 
 .ONESHELL:
-#SHELL = 
+#SHELL =
 #.SHELLFLAGS =
 
 #  in github actions comes from make -e version=git_ref
@@ -9,12 +9,12 @@ version=$(shell cat VERSION)
 
 # various directories
 bindirs=$(wildcard ./cmd/*)
-installdir=goslmailer-$(version)
+installdir=build/goslmailer-$(version)
 
 # list of files to include in build
 bins=$(notdir $(bindirs))
 readme=README.md
-templates=
+templates=templates/adaptive_card_template.json templates/telegramTemplate.html
 config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
 
 # can be replaced with go test ./... construct
@@ -33,7 +33,7 @@ build:
 	@echo "********************************************************************************"
 	@echo Building $(bindirs)
 	@echo "********************************************************************************"
-	for i in $(bindirs); 
+	for i in $(bindirs);
 	do
 		echo "................................................................................"
 		echo "--> Now building: $$i"
@@ -42,7 +42,7 @@ build:
 	done;
 
 install:
-	mkdir $(installdir)
+	mkdir -p $(installdir)
 	cp $(bins) $(readme) $(templates) $(config) $(installdir)
 
 test_new:

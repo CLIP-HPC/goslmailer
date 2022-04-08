@@ -8,4 +8,5 @@ type Connector struct {
 	spoolDir        string
 	messageTemplate string
 	useLookup       string
+        format          string
 }

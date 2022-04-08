@@ -55,11 +55,15 @@ func (j *JobContext) GenerateHints(qosMap map[uint64]string) {
 			// Check if it was submitted without specifying a walltime (just against default maxwalltime of QOS)
 			optimalQos := calculateOptimalQOS(qosMap, j.JobStats.Runtime)
 			if qos, ok := qosMap[j.JobStats.Walltime]; ok {
-				j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted to %s QOS and finished within half of the requested walltime. Consider submitting it to the %s QOS instead", qos, optimalQos))
+                                if qos != optimalQos {
+                                        j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted to %s QOS and finished within half of the requested walltime. Consider submitting it to the %s QOS instead", qos, optimalQos))
+                                } else {
+                                        j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted to %s QOS and finished within half of the requested walltime. Consider reducing the walltime for backfilling purposes", qos))
+                                }
 				j.Hints = append(j.Hints, fmt.Sprintf("TIP: No --time specified: Using default %s QOS limit. Specify --time <walltime> to increase the chances that the scheduler will use this job for backfilling purposes! See https://docs.vbc.ac.at/link/21#bkmrk-scheduling-policy for more information.", qos))
 			} else {
 
-				j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted with a walltime of %s and finished in less half of the time, consider reducing the walltime and submitted to %s QOS", j.JobStats.WalltimeStr, optimalQos))
+                                j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted with a walltime of %s and finished in less half of the time, consider reducing the walltime and submit it to %s QOS", j.JobStats.WalltimeStr, optimalQos))
 			}
 
 		}
@@ -119,11 +123,14 @@ func (j *JobContext) IsJobFinished() bool {
 
 // Get additional job statistics from external source (e.g. jobinfo or sacct)
 func (j *JobContext) GetJobStats(log *log.Logger, subject string) {
+        log.Print("Start retrieving job stats")
+        log.Printf("%#v", j.SlurmEnvironment)
 	jobId := j.SlurmEnvironment.SLURM_JOBID
 	if strings.Contains(subject, "Slurm Array Summary Job_id=") {
 		j.MailSubject = fmt.Sprintf("Job Array Summary %s (%s-%s)", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID, j.SlurmEnvironment.SLURM_ARRAY_TASK_MIN, j.SlurmEnvironment.SLURM_ARRAY_TASK_MAX)
+                //jobId = fmt.Sprintf("%s_%s", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID, j.SlurmEnvironment.SLURM_ARRAY_TASK_ID)
 	} else if strings.Contains(subject, "Slurm Array Task Job_id") {
-		jobId = fmt.Sprintf("%s_%s", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID, j.SlurmEnvironment.SLURM_ARRAY_TASK_ID)
+                jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 		j.MailSubject = fmt.Sprintf("Job Array Task %s", jobId)
 
 	} else {
@@ -133,6 +140,7 @@ func (j *JobContext) GetJobStats(log *log.Logger, subject string) {
 	if j.SlurmEnvironment.SLURM_ARRAY_JOB_ID != "" {
 		jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 	}
+        log.Printf("Fetch job info %s", jobId)
 	j.JobStats = *GetSacctMetrics(jobId, log)
 	counter := 0
 	for !IsJobFinished(j.JobStats.State) && j.JobStats.State != j.SlurmEnvironment.SLURM_JOB_STATE && counter < 5 {
@@ -141,8 +149,8 @@ func (j *JobContext) GetJobStats(log *log.Logger, subject string) {
 		counter += 1
 	}
 	if j.JobStats.State == "RUNNING" {
+                log.Print("Update job with live stats")
 		updateJobStatsWithLiveData(&j.JobStats, jobId, log)
 	}
-
-	log.Printf("%#v", j.SlurmEnvironment)
+        log.Printf("Finished retrieving job stats")
 }
