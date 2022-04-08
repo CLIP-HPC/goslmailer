@@ -34,7 +34,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 	switch c.renderToFile {
 	case "no", "spool":
 		if c.spoolDir == "" {
-			return nil, errors.New("spoolDir must be defined, aborting")
+			return nil, errors.New("telegram spoolDir must be defined, aborting")
 		}
 	}
 	return &c, nil
@@ -99,25 +99,25 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		Token: c.token,
 	})
 	if err != nil {
-		log.Fatal(err)
+		l.Fatal(err)
 	}
 
 	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
 	enduser := lookup.ExtLookupUser(mp.TargetUser, c.useLookup)
-	l.Printf("Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
+	l.Printf("telegram Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
 
 	l.Printf("telegram sending to targetUserID: %s\n", enduser)
 
 	// get chat ID which comes from --mail-user=telegram:cID switch
 	cID, err := strconv.ParseInt(enduser, 10, 64)
 	if err != nil {
-		log.Printf("cID strconv failed %s", err)
+		l.Printf("telegram cID strconv failed %s", err)
 		return err
 	}
 
 	chat, err := tb.ChatByID(cID)
 	if err != nil {
-		log.Printf("chatbyusername failed %s", err)
+		l.Printf("telegram chatbyusername failed %s", err)
 		return err
 	}
 
@@ -137,7 +137,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		// render markdown template to a file in working directory - debug purposes
 		// prepare outfile name
 		t := strconv.FormatInt(time.Now().UnixNano(), 10)
-		l.Printf("Telegram time: %s\n", t)
+		l.Printf("telegram time: %s\n", t)
 		outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".md"
 		res, err := io.ReadAll(&buffer)
 		if err != nil {
@@ -147,7 +147,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		if err != nil {
 			return err
 		}
-		l.Printf("Telegram send to file: %s\n", outFile)
+		l.Printf("telegram send to file: %s\n", outFile)
 	case "spool":
 		// deposit GOB to spoolDir if allowed
 		if useSpool {
@@ -161,22 +161,22 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		//https://core.telegram.org/bots/api#formatting-options
 		msg, err := tb.Send(chat, buffer.String(), "MarkdownV2")
 		if err != nil {
-			l.Printf("tebebot.Send Failed: %s\n", err)
+			l.Printf("telegram bot.Send Failed: %s\n", err)
 			dts = true
 			//return err
 			e = err
 		} else {
-			l.Printf("Telegram Send() successful, messageID: %d\n", msg.ID)
+			l.Printf("telegram Send() successful, messageID: %d\n", msg.ID)
 			dts = false
 		}
 	}
 
 	// save mp to spool if we're allowed (not allowed when called from gobler, to prevent gobs multiplying)
 	if dts && useSpool {
-		l.Printf("Backing off to spool.\n")
+		l.Printf("telegram Backing off to spool.\n")
 		err := spool.DepositToSpool(c.spoolDir, mp)
 		if err != nil {
-			l.Printf("DepositToSpool Failed!\n")
+			l.Printf("telegram DepositToSpool Failed!\n")
 			return err
 		}
 	}
