@@ -4,12 +4,23 @@
 #SHELL = 
 #.SHELLFLAGS =
 
+#  in github actions comes from make -e version=git_ref
+version=$(shell cat VERSION)
+
+# various directories
 bindirs=$(wildcard ./cmd/*)
+installdir=goslmailer-$(version)
+
+# list of files to include in build
 bins=$(notdir $(bindirs))
+readme=README.md
+templates=
+config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
+
 # can be replaced with go test ./... construct
 testdirs=$(sort $(dir $(shell find ./ -name *_test.go)))
 
-all: list test build
+all: list test build install
 
 list:
 	@echo "================================================================================"
@@ -30,6 +41,10 @@ build:
 		go build -v $$i;
 	done;
 
+install:
+	mkdir $(installdir)
+	cp $(bins) $(readme) $(templates) $(config) $(installdir)
+
 test_new:
 	$(foreach dir, $(testdirs), go test -v -count=1 $(dir) || exit $$?;)
 
@@ -41,3 +56,4 @@ test:
 
 clean:
 	rm $(bins)
+	rm -rf $(installdir)
