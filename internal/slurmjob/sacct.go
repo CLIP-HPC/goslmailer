@@ -107,6 +107,9 @@ func ParseSstatMetrics(input []byte) *SstatMetrics {
 
 func ParseSacctMetrics(input []byte) *SacctMetrics {
         var metrics SacctMetrics
+        if len(input) == 0 {
+                return &metrics
+        }
         lines := strings.Split(string(input), "\n")
         for _, line := range lines {
                 if line == "" {
@@ -178,6 +181,8 @@ func ParseSacctMetrics(input []byte) *SacctMetrics {
         metrics.Walltime = uint64(parseCpuTime(split[9]))
         metrics.RuntimeStr = split[10]
         metrics.Runtime = uint64(parseCpuTime(split[10]))
+
+        log.Printf("Metrics: %#v", metrics)
         return &metrics
 }
 

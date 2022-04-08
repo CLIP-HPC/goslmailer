@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -28,16 +27,14 @@ func main() {
 	cfg := config.NewConfigContainer()
 	err := cfg.GetConfig("/etc/slurm/gobler.conf")
 	if err != nil {
-		fmt.Printf("MAIN: getConfig(gobconfig) failed: %s", err)
-		os.Exit(1)
+		log.Fatalf("MAIN: getConfig(gobconfig) failed: %s\n", err)
 	}
 
 	// setup logger
 	if cfg.Logfile != "" {
 		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			fmt.Println("ERROR: can not open configured log file. Exiting.")
-			os.Exit(1)
+			log.Fatalf("ERROR: can not open configured log file. Exiting.\n")
 		}
 	} else {
 		logFile = os.Stderr

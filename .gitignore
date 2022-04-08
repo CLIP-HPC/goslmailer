@@ -1,3 +1,7 @@
 .vscode/**
 *.swp
 cmd/goslmailer/goslmailer
+build/
+gobler
+goslmailer
+tgslurmbot

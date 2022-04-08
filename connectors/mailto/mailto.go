@@ -36,7 +36,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		return e
 	}
 
-	l.Printf("mailto params %#v\n", c)
+	l.Printf("Params %#v\n", c)
 	// todo:
 	// - call lookup on targetUserId
 	// - test if in allowList/blockList
