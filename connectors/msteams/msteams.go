@@ -90,10 +90,14 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	l.Println("................... sendToMSTeams START ........................................")
 
 	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
-	enduser := lookup.ExtLookupUser(mp.TargetUser, c.useLookup)
+	enduser, err := lookup.ExtLookupUser(mp.TargetUser, c.useLookup, l)
+	if err != nil {
+		l.Printf("Lookup failed for %s with %s\n", mp.TargetUser, err)
+		return err
+	}
 	l.Printf("Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
 
-	l.Printf("MsTeams sending to targetUserID: %s\n", enduser)
+	l.Printf("Sending to targetUserID: %s\n", enduser)
 
 	// debug purposes
 	c.dumpConnector(l)
@@ -115,7 +119,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 
 		// prepare outfile name
 		t := strconv.FormatInt(time.Now().UnixNano(), 10)
-		l.Printf("MsTeams time: %s\n", t)
+		l.Printf("Time: %s\n", t)
 		outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".json"
 		res, err := io.ReadAll(&buffer)
 		if err != nil {
@@ -125,7 +129,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		if err != nil {
 			return err
 		}
-		l.Printf("MsTeams send to file: %s\n", outFile)
+		l.Printf("Send successful to file: %s\n", outFile)
 	case "spool":
 		// deposit GOB to spoolDir if allowed
 		if useSpool {
@@ -144,7 +148,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 			//return err
 			e = err
 		} else {
-			l.Printf("MsTeams RESPONSE Status: %s\n", resp.Status)
+			l.Printf("RESPONSE Status: %s\n", resp.Status)
 			switch resp.StatusCode {
 			case 429:
 				l.Printf("429 received.\n")
