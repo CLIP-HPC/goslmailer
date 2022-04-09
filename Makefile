@@ -7,7 +7,7 @@
 # Inject into binary via linker:
 # ...in github actions comes from make -e version=git_ref
 version=$(shell cat VERSION)
-commit=$(shell git show --format=format:%H HEAD)
+commit=$(shell git show --no-patch --format=format:%H HEAD)
 buildVersionVar=github.com/pja237/goslmailer/internal/version.buildVersion
 buildCommitVar=github.com/pja237/goslmailer/internal/version.buildCommit
 
@@ -36,6 +36,11 @@ list:
 build:
 	@echo "********************************************************************************"
 	@echo Building $(bindirs)
+	@echo Variables:
+	@echo buildVersionVar: $(buildVersionVar)
+	@echo version: $(version)
+	@echo buildCommitVar: $(buildCommitVar)
+	@echo commit: $(commit)
 	@echo "********************************************************************************"
 	for i in $(bindirs);
 	do
