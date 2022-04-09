@@ -4,8 +4,12 @@
 #SHELL =
 #.SHELLFLAGS =
 
-#  in github actions comes from make -e version=git_ref
+# Inject into binary via linker:
+# ...in github actions comes from make -e version=git_ref
 version=$(shell cat VERSION)
+commit=$(shell git show --format=format:%H HEAD)
+buildVersionVar=github.com/pja237/goslmailer/internal/version.buildVersion
+buildCommitVar=github.com/pja237/goslmailer/internal/version.buildCommit
 
 # various directories
 bindirs=$(wildcard ./cmd/*)
@@ -38,7 +42,7 @@ build:
 		echo "................................................................................"
 		echo "--> Now building: $$i"
 		echo "................................................................................"
-		go build -v $$i;
+		go build -v -ldflags '-X $(buildVersionVar)=$(version) -X $(buildCommitVar)=$(commit)' $$i;
 	done;
 
 install:

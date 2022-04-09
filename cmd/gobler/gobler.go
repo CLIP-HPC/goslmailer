@@ -9,6 +9,7 @@ import (
 	"github.com/pja237/goslmailer/internal/config"
 	"github.com/pja237/goslmailer/internal/connectors"
 	"github.com/pja237/goslmailer/internal/message"
+	"github.com/pja237/goslmailer/internal/version"
 )
 
 var lock sync.Mutex
@@ -42,6 +43,9 @@ func main() {
 	log := log.New(logFile, "gobler:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 
 	log.Println("======================= Gobler start ===========================================")
+
+	version.DumpVersion(log)
+
 	cfg.DumpConfig(log)
 
 	// populate map with configured referenced connectors

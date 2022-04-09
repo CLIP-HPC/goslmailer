@@ -3,18 +3,28 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/pja237/goslmailer/internal/config"
+	"github.com/pja237/goslmailer/internal/version"
 	tele "gopkg.in/telebot.v3"
 )
 
 func main() {
+
+	// todo: separate config, logging etc...
+	log := log.New(os.Stderr, "tgslurmbot:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+
 	cfg := config.NewConfigContainer()
 	err := cfg.GetConfig("/etc/slurm/goslmailer.conf")
 	if err != nil {
 		log.Fatalf("MAIN: getConfig(gobconfig) failed: %s\n", err)
 	}
+
+	log.Println("======================= tgslurmbot start =======================================")
+
+	version.DumpVersion(log)
 
 	if _, ok := cfg.Connectors["telegram"]["token"]; !ok {
 		log.Fatalf("MAIN: fetching config[connectors][telegram][token] failed: %s\n", err)

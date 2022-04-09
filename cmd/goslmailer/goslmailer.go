@@ -10,6 +10,7 @@ import (
 	"github.com/pja237/goslmailer/internal/connectors"
 	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/version"
 )
 
 func main() {
@@ -43,6 +44,9 @@ func main() {
 	log := log.New(logFile, "goslmailer:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 
 	log.Println("======================== START OF RUN ==========================================")
+
+	version.DumpVersion(log)
+
 	cfg.DumpConfig(log)
 
 	// get '-s "subject" userid' command line parameters with which we're called
