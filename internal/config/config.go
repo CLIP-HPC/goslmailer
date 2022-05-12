@@ -1,3 +1,8 @@
+/*
+Package config implements the ConfigContainer structure and accompanying methods.
+It holds the configuration data for all utilities.
+Configuration file format is the same for all.
+*/
 package config
 
 import (

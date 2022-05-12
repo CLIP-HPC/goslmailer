@@ -1,13 +1,14 @@
 package main
 
 import (
-	"io"
 	"log"
 	"os"
 	"sync"
 
+	"github.com/pja237/goslmailer/internal/cmdline"
 	"github.com/pja237/goslmailer/internal/config"
 	"github.com/pja237/goslmailer/internal/connectors"
+	"github.com/pja237/goslmailer/internal/logger"
 	"github.com/pja237/goslmailer/internal/message"
 	"github.com/pja237/goslmailer/internal/version"
 )
@@ -19,66 +20,72 @@ type MsgList []message.MessagePack
 func main() {
 
 	var (
-		conns   = make(connectors.Connectors)
-		logFile io.Writer
-		wg      sync.WaitGroup
+		conns = make(connectors.Connectors)
+		wg    sync.WaitGroup
 	)
 
-	// read gobler configuration
-	cfg := config.NewConfigContainer()
-	err := cfg.GetConfig("/etc/slurm/gobler.conf")
+	// parse command line params
+	cmd, err := cmdline.NewCmdArgs("gobler")
 	if err != nil {
-		log.Fatalf("MAIN: getConfig(gobconfig) failed: %s\n", err)
+		log.Fatalf("ERROR: parse command line failed with: %q\n", err)
+	}
+
+	if *(cmd.Version) == true {
+		l := log.New(os.Stderr, "gobler:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+		version.DumpVersion(l)
+		os.Exit(0)
+	}
+
+	// read config file
+	cfg := config.NewConfigContainer()
+	err = cfg.GetConfig(*(cmd.CfgFile))
+	if err != nil {
+		log.Fatalf("ERROR: getConfig() failed: %s\n", err)
 	}
 
 	// setup logger
-	if cfg.Logfile != "" {
-		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Fatalf("ERROR: can not open configured log file. Exiting.\n")
-		}
-	} else {
-		logFile = os.Stderr
+	l, err := logger.SetupLogger(cfg.Logfile, "gobler")
+	if err != nil {
+		log.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Logfile, err)
 	}
-	log := log.New(logFile, "gobler:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 
-	log.Println("======================= Gobler start ===========================================")
+	l.Println("======================= Gobler start ===========================================")
 
-	version.DumpVersion(log)
+	version.DumpVersion(l)
 
-	cfg.DumpConfig(log)
+	cfg.DumpConfig(l)
 
 	// populate map with configured referenced connectors
-	err = conns.PopulateConnectors(cfg, log)
+	err = conns.PopulateConnectors(cfg, l)
 	if err != nil {
-		log.Printf("MAIN: PopulateConnectors() failed with: %s\n", err)
+		l.Printf("MAIN: PopulateConnectors() failed with: %s\n", err)
 	}
 
 	// iterate and spin up monitor,picker and sender routines
 	for con := range cfg.Connectors {
 		spd, ok := cfg.Connectors[con]["spoolDir"]
 		if ok {
-			log.Printf("MAIN: %s spoolDir exists: %s - %s\n", con, cfg.Connectors[con]["spoolDir"], spd)
+			l.Printf("MAIN: %s spoolDir exists: %s - %s\n", con, cfg.Connectors[con]["spoolDir"], spd)
 
-			cm, err := NewConMon(con, cfg.Connectors[con], log)
+			cm, err := NewConMon(con, cfg.Connectors[con], l)
 			if err != nil {
-				log.Printf("MAIN: NewConMon(%s) failed with: %s\n", con, err)
-				log.Printf("MAIN: skipping %s...\n", con)
+				l.Printf("MAIN: NewConMon(%s) failed with: %s\n", con, err)
+				l.Printf("MAIN: skipping %s...\n", con)
 				continue
 			}
-			// func (cm *conMon) SpinUp(conns connectors.Connectors, wg sync.WaitGroup, log *log.Logger) error {
-			err = cm.SpinUp(conns, &wg, log)
+			// func (cm *conMon) SpinUp(conns connectors.Connectors, wg sync.WaitGroup, l *log.Logger) error {
+			err = cm.SpinUp(conns, &wg, l)
 			if err != nil {
-				log.Printf("MAIN: SpinUp(%s) failed with: %s\n", con, err)
+				l.Printf("MAIN: SpinUp(%s) failed with: %s\n", con, err)
 			}
 		} else {
-			log.Printf("MAIN: connector %s doesn't have spoolDir defined\n", con)
+			l.Printf("MAIN: connector %s doesn't have spoolDir defined\n", con)
 		}
 	}
 
-	log.Printf("MAIN: Waiting for routines to finish...\n")
+	l.Printf("MAIN: Waiting for routines to finish...\n")
 	wg.Wait()
-	log.Printf("MAIN: All routines finished, exiting main\n")
+	l.Printf("MAIN: All routines finished, exiting main\n")
 
-	log.Println("======================= Gobler end =============================================")
+	l.Println("======================= Gobler end =============================================")
 }

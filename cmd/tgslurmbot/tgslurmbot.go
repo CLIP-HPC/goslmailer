@@ -6,29 +6,54 @@ import (
 	"os"
 	"time"
 
+	"github.com/pja237/goslmailer/internal/cmdline"
 	"github.com/pja237/goslmailer/internal/config"
+	"github.com/pja237/goslmailer/internal/logger"
 	"github.com/pja237/goslmailer/internal/version"
 	tele "gopkg.in/telebot.v3"
 )
 
 func main() {
 
-	// todo: separate config, logging etc...
-	log := log.New(os.Stderr, "tgslurmbot:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+	var (
+		l   *log.Logger
+		err error
+	)
 
-	cfg := config.NewConfigContainer()
-	err := cfg.GetConfig("/etc/slurm/goslmailer.conf")
+	// parse command line params
+	cmd, err := cmdline.NewCmdArgs("tgslurmbot")
 	if err != nil {
-		log.Fatalf("MAIN: getConfig(gobconfig) failed: %s\n", err)
+		log.Fatalf("ERROR: parse command line failed with: %q\n", err)
 	}
 
-	log.Println("======================= tgslurmbot start =======================================")
+	if *(cmd.Version) == true {
+		l = log.New(os.Stderr, "tgslurmbot:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+		version.DumpVersion(l)
+		os.Exit(0)
+	}
 
-	version.DumpVersion(log)
+	// read config file
+	cfg := config.NewConfigContainer()
+	err = cfg.GetConfig(*(cmd.CfgFile))
+	if err != nil {
+		log.Fatalf("ERROR: getConfig() failed: %s\n", err)
+	}
+
+	// setup logger
+	l, err = logger.SetupLogger(cfg.Logfile, "tgslurmbot")
+	if err != nil {
+		log.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Logfile, err)
+	}
+
+	l.Println("======================= tgslurmbot start =======================================")
+
+	version.DumpVersion(l)
 
 	if _, ok := cfg.Connectors["telegram"]["token"]; !ok {
-		log.Fatalf("MAIN: fetching config[connectors][telegram][token] failed: %s\n", err)
+		l.Fatalf("MAIN: fetching config[connectors][telegram][token] failed: %s\n", err)
 	}
+
+	l.Printf("Starting: %q\n", cfg.Connectors["telegram"]["name"])
 
 	pref := tele.Settings{
 		Token:  cfg.Connectors["telegram"]["token"],
@@ -46,7 +71,8 @@ func main() {
 	})
 
 	b.Handle("/start", func(c tele.Context) error {
-		str := fmt.Sprintf("Welcome to CLIP SlurmBot,\nplease use this switch in your job submission script in addition to '--mail-type' and i'll get back to you:\n '--mail-user=telegram:%d'", c.Chat().ID)
+		// todo: logging of msg exchanges?
+		str := fmt.Sprintf("Welcome to %s,\nplease use this switch in your job submission script in addition to '--mail-type' and i'll get back to you:\n '--mail-user=telegram:%d'", cfg.Connectors["telegram"]["name"], c.Chat().ID)
 		return c.Send(str)
 	})
 
