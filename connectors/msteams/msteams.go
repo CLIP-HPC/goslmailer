@@ -3,19 +3,16 @@ package msteams
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"text/template"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/pja237/goslmailer/internal/lookup"
 	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/renderer"
 	"github.com/pja237/goslmailer/internal/spool"
 )
 
@@ -37,45 +34,6 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		}
 	}
 	return &c, nil
-}
-
-func (c *Connector) msteamsRenderCardTemplate(j *slurmjob.JobContext, userid string, buf *bytes.Buffer) error {
-
-	var x = struct {
-		Job     slurmjob.JobContext
-		UserID  string
-		Created string
-	}{
-		*j,
-		userid,
-		fmt.Sprint(time.Now().Format("Mon, 2 Jan 2006 15:04:05 MST")),
-	}
-
-	var funcMap = template.FuncMap{
-		"humanBytes": humanize.Bytes,
-	}
-
-	f, err := os.ReadFile(c.adaptiveCardTemplate)
-	if err != nil {
-		return err
-	}
-	t := template.Must(template.New("AdaptiveCard").Funcs(funcMap).Parse(string(f)))
-	err = t.Execute(buf, x)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Connector) dumpConnector(l *log.Logger) {
-	l.Printf("msteams.dumpConnector: name: %q\n", c.name)
-	l.Printf("msteams.dumpConnector: url: %q\n", c.url)
-	l.Printf("msteams.dumpConnector: renderToFile: %q\n", c.renderToFile)
-	l.Printf("msteams.dumpConnector: spoolDir: %q\n", c.spoolDir)
-	l.Printf("msteams.dumpConnector: adaptiveCardTemplate: %q\n", c.adaptiveCardTemplate)
-	l.Printf("msteams.dumpConnector: useLookup: %q\n", c.useLookup)
-	l.Println("................................................................................")
-
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {
@@ -106,7 +64,8 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	if c.renderToFile != "spool" {
 		// buffer to place rendered json in
 		buffer = bytes.Buffer{}
-		err := c.msteamsRenderCardTemplate(mp.JobContext, enduser, &buffer)
+		//err := c.msteamsRenderCardTemplate(mp.JobContext, enduser, &buffer)
+		err := renderer.RenderTemplate(c.adaptiveCardTemplate, "text", mp.JobContext, enduser, &buffer)
 		if err != nil {
 			return err
 		}

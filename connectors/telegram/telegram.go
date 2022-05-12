@@ -3,19 +3,15 @@ package telegram
 import (
 	"bytes"
 	"errors"
-	"fmt"
-        htmltemplate "html/template"
 	"io"
 	"log"
 	"os"
 	"strconv"
-        texttemplate "text/template"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/pja237/goslmailer/internal/lookup"
 	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/pja237/goslmailer/internal/renderer"
 	"github.com/pja237/goslmailer/internal/spool"
 	telebot "gopkg.in/telebot.v3"
 )
@@ -30,7 +26,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		spoolDir:        conf["spoolDir"],
 		messageTemplate: conf["messageTemplate"],
 		useLookup:       conf["useLookup"],
-                format:          conf["format"],
+		format:          conf["format"],
 	}
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	switch c.renderToFile {
@@ -40,52 +36,6 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		}
 	}
 	return &c, nil
-}
-
-func (c *Connector) telegramRenderTemplate(j *slurmjob.JobContext, userid string, buf *bytes.Buffer) error {
-
-	var x = struct {
-		Job     slurmjob.JobContext
-		UserID  string
-		Created string
-	}{
-		*j,
-		userid,
-		fmt.Sprint(time.Now().Format("Mon, 2 Jan 2006 15:04:05 MST")),
-	}
-	f, err := os.ReadFile(c.messageTemplate)
-	if err != nil {
-		return err
-	}
-        if c.format == "HTML" {
-                var funcMap = htmltemplate.FuncMap{
-                        "humanBytes": humanize.Bytes,
-                }
-                t := htmltemplate.Must(htmltemplate.New("TelegramMD").Funcs(funcMap).Parse(string(f)))
-                err = t.Execute(buf, x)
-        } else {
-                var funcMap = texttemplate.FuncMap{
-                        "humanBytes": humanize.Bytes,
-                }
-                t := texttemplate.Must(texttemplate.New("TelegramMD").Funcs(funcMap).Parse(string(f)))
-                err = t.Execute(buf, x)
-        }
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Connector) dumpConnector(l *log.Logger) {
-	l.Printf("telegram.dumpConnector: name: %q\n", c.name)
-	l.Printf("telegram.dumpConnector: url: %q\n", c.url)
-	l.Printf("telegram.dumpConnector: token: %q\n", c.token)
-	l.Printf("telegram.dumpConnector: renderToFile: %q\n", c.renderToFile)
-	l.Printf("telegram.dumpConnector: spoolDir: %q\n", c.spoolDir)
-	l.Printf("telegram.dumpConnector: messageTemplate: %q\n", c.messageTemplate)
-	l.Printf("telegram.dumpConnector: useLookup: %q\n", c.useLookup)
-	l.Println("................................................................................")
-
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {
@@ -137,7 +87,8 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	if c.renderToFile != "spool" {
 		// buffer to place rendered json in
 		buffer = bytes.Buffer{}
-		err := c.telegramRenderTemplate(mp.JobContext, enduser, &buffer)
+		//err := c.telegramRenderTemplate(mp.JobContext, enduser, &buffer)
+		err := renderer.RenderTemplate(c.messageTemplate, c.format, mp.JobContext, enduser, &buffer)
 		if err != nil {
 			return err
 		}
@@ -171,7 +122,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		}
 	default:
 		//https://core.telegram.org/bots/api#formatting-options
-                msg, err := tb.Send(chat, buffer.String(), c.format)
+		msg, err := tb.Send(chat, buffer.String(), c.format)
 		if err != nil {
 			l.Printf("bot.Send() Failed: %s\n", err)
 			dts = true
