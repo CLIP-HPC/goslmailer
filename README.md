@@ -82,16 +82,15 @@ Specifies which receiver scheme is the default one, in case when user didn't spe
 
 ---
 
-### msteams
+### mailto
 
-Sends a message to a preconfigured ms teams channel webhook.
+Mailto covers for original slurm e-mail sending functionality, plus a little bit more.
+With connector parameters, you can:
 
-![MS Teams card](./images/msteams.png)
-
-Since MS Teams does not provide with the option to send messages to users directly, only to channel webhooks, we have devised a way using MS Power Automate framework to pick up messages from this one configured *sink* channel and deliver them via private 1on1 chats to the recipient user.
-
-Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/pja237/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
-A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
+* specify your e-mail client (ex slurm: `MailProg`, e.g. /usr/bin/mutt)
+* template mail client command line  (e.g. custom subject line)
+* template message body
+* allowList the recipients
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 
@@ -120,11 +119,17 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
-### mailto
 
-Mailto covers for original slurm e-mail sending functionality, plus a little bit more.
-In parameters, you can specify your e-mail command line prog (slurm: `MailProg`), template it's command line, message text and allowList/blockList the recipients.
-(not all is implemented yet!)
+### msteams
+
+Sends a message to a preconfigured ms teams channel webhook.
+
+![MS Teams card](./images/msteams.png)
+
+Since MS Teams does not provide with the option to send messages to users directly, only to channel webhooks, we have devised a way using MS Power Automate framework to pick up messages from this one configured *sink* channel and deliver them via private 1on1 chats to the recipient user.
+
+Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/pja237/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
+A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 

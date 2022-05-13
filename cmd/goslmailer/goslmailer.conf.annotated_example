@@ -12,11 +12,12 @@
     },                                              #  available lookups ("GECOS", "none")
     "mailto": {
       "name": "original slurm mail functionality, extended.",
-      "mailCmd": "/etc/slurm/mail.sh",
+      "mailCmd": "/usr/bin/mutt",
       "mailCmdParams": "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\"",
-      "mailTemplate": "/etc/slurm/mailTemplate.tmpl",
+      "mailTemplate": "/etc/slurm/mailTemplate.tmpl",    # message body template
+      "mailFormat": "HTML",                              # `HTML` or `text` (can use telegram html in templates/)
       "allowList": ".+@(imp|imba.oeaw|gmi.oeaw).ac.at",
-      "blockList": ""
+      "blockList": ""                                    # unused
     },
     "telegram": {
       "name": "telegram bot connector",

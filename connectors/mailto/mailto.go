@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/pja237/goslmailer/internal/message"
+	"github.com/pja237/goslmailer/internal/renderer"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {
@@ -18,6 +19,7 @@ func NewConnector(conf map[string]string) (*Connector, error) {
 		mailCmd:       conf["mailCmd"],
 		mailCmdParams: conf["mailCmdParams"],
 		mailTemplate:  conf["mailTemplate"],
+		mailFormat:    conf["mailFormat"],
 		allowList:     conf["allowList"],
 		blockList:     conf["blockList"],
 	}
@@ -28,18 +30,28 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	var (
 		e         error
 		cmdparams = bytes.Buffer{}
+		body      = bytes.Buffer{}
 	)
 
+	// render mail command line params (-s "mail subject" et.al.)
 	tmpl := template.Must(template.New("cmdparams").Parse(c.mailCmdParams))
 	e = tmpl.Execute(&cmdparams, mp.JobContext)
 	if e != nil {
 		return e
 	}
 
-	l.Printf("Params %#v\n", c)
+	// render mail body
+	err := renderer.RenderTemplate(c.mailTemplate, c.mailFormat, mp.JobContext, mp.TargetUser, &body)
+	if err != nil {
+		return err
+	}
+
+	l.Printf("PARAMS: %#v\n", c)
+	l.Printf("CMD: %q\n", string(cmdparams.Bytes()))
+	l.Printf("BODY: %q\n", string(body.Bytes()))
+
 	// todo:
-	// - call lookup on targetUserId
-	// - test if in allowList/blockList
+	// - call lookup on targetUserId?
 	// - implement useSpool mechanics for gobler
 
 	// allowList
@@ -54,6 +66,8 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 
 	// send:
 	cmd := exec.Command(c.mailCmd, cmdparams.String(), mp.TargetUser)
+	l.Printf("ExecCMD: %q %q\n", cmd.Path, cmd.Args)
+	cmd.Stdin = &body
 	//cmd.Stdin = bytes.NewBuffer([]byte{0x04})
 	out, e := cmd.Output()
 	if e != nil {

@@ -5,6 +5,7 @@ type Connector struct {
 	mailCmd       string
 	mailCmdParams string
 	mailTemplate  string
+	mailFormat    string
 	allowList     string
 	blockList     string
 }
