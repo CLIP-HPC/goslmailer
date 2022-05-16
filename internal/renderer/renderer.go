@@ -3,8 +3,8 @@ package renderer
 import (
 	"bytes"
 	"fmt"
+	htmltemplate "html/template"
 	"os"
-	htmltemplate "text/template"
 	texttemplate "text/template"
 	"time"
 
