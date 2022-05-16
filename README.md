@@ -5,7 +5,7 @@
 * message delivery to: **msteams**, **telegram**, **e-mail**
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
-* **templateable** messages
+* **templateable** messages ([readme](./templates/README.md))
 * message **throttling**
 
 ---
@@ -30,6 +30,31 @@ sbatch --mail-type=ALL --mail-user="mailto:useremailA,msteams:usernameB,telegram
 ```
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
+
+---
+
+## Installation
+
+### goslmailer
+
+* place binary to the path of your liking
+* place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf`
+* point slurm `MailProg` to the binary
+
+### gobler 
+
+* place binary to the path of your liking
+* place [gobler.conf](cmd/gobler/gobler.conf) to the path of your liking
+* start the service (with -c switch pointing to config file)
+
+### tgslurmbot
+
+* place binary to the path of your liking
+* place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) to the path of your liking
+  * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
+* start the service (with -c switch pointing to config file)
+
+---
 
 ## Currently available connectors:
 
