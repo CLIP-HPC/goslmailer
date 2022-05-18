@@ -1,4 +1,4 @@
-module github.com/pja237/goslmailer
+module github.com/CLIP-HPC/goslmailer
 
 go 1.17
 

@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"text/template"
 
-	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/renderer"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {

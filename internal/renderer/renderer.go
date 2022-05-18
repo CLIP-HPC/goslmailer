@@ -8,8 +8,8 @@ import (
 	texttemplate "text/template"
 	"time"
 
+	"github.com/CLIP-HPC/goslmailer/internal/slurmjob"
 	"github.com/dustin/go-humanize"
-	"github.com/pja237/goslmailer/internal/slurmjob"
 )
 
 func RenderTemplate(tfile, format string, j *slurmjob.JobContext, userid string, buf *bytes.Buffer) error {

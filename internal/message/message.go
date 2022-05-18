@@ -3,7 +3,7 @@ package message
 import (
 	"time"
 
-	"github.com/pja237/goslmailer/internal/slurmjob"
+	"github.com/CLIP-HPC/goslmailer/internal/slurmjob"
 )
 
 // MessagePack is the central data structure that holds all the data about the message that is currently being processed.

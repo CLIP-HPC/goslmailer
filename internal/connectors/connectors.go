@@ -3,11 +3,11 @@ package connectors
 import (
 	"log"
 
-	"github.com/pja237/goslmailer/connectors/mailto"
-	"github.com/pja237/goslmailer/connectors/msteams"
-	"github.com/pja237/goslmailer/connectors/telegram"
-	"github.com/pja237/goslmailer/internal/config"
-	"github.com/pja237/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/connectors/mailto"
+	"github.com/CLIP-HPC/goslmailer/connectors/msteams"
+	"github.com/CLIP-HPC/goslmailer/connectors/telegram"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
 )
 
 type Connector interface {

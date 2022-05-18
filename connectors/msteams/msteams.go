@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pja237/goslmailer/internal/lookup"
-	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/renderer"
-	"github.com/pja237/goslmailer/internal/spool"
+	"github.com/CLIP-HPC/goslmailer/internal/lookup"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/internal/renderer"
+	"github.com/CLIP-HPC/goslmailer/internal/spool"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {

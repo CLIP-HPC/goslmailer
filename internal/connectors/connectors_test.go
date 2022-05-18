@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/pja237/goslmailer/internal/config"
-	"github.com/pja237/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 )
 
 var connectorsExpected = []string{"msteams", "mailto"}
