@@ -8,8 +8,8 @@
 # ...in github actions comes from make -e version=git_ref
 version=$(shell cat VERSION)
 commit=$(shell git show --no-patch --format=format:%H HEAD)
-buildVersionVar=github.com/pja237/goslmailer/internal/version.buildVersion
-buildCommitVar=github.com/pja237/goslmailer/internal/version.buildCommit
+buildVersionVar=github.com/CLIP-HPC/goslmailer/internal/version.buildVersion
+buildCommitVar=github.com/CLIP-HPC/goslmailer/internal/version.buildCommit
 
 # various directories
 bindirs=$(wildcard ./cmd/*)

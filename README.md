@@ -153,7 +153,7 @@ Sends a message to a preconfigured ms teams channel webhook.
 
 Since MS Teams does not provide with the option to send messages to users directly, only to channel webhooks, we have devised a way using MS Power Automate framework to pick up messages from this one configured *sink* channel and deliver them via private 1on1 chats to the recipient user.
 
-Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/pja237/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
+Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/CLIP-HPC/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
 A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
@@ -162,7 +162,6 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ## ToDo
 
-See: [goslmailer project](https://github.com/users/pja237/projects/1/views/1)
 
 ---
 

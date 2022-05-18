@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pja237/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
 )
 
 const testDir = "../../test_data/config_test"

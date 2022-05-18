@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/pja237/goslmailer/internal/config"
-	"github.com/pja237/goslmailer/internal/connectors"
-	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/slurmjob"
-	"github.com/pja237/goslmailer/internal/version"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/internal/slurmjob"
+	"github.com/CLIP-HPC/goslmailer/internal/version"
 )
 
 func main() {

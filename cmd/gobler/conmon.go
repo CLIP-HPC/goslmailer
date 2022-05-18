@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pja237/goslmailer/internal/connectors"
-	"github.com/pja237/goslmailer/internal/spool"
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/spool"
 )
 
 type conMon struct {

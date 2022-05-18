@@ -5,12 +5,12 @@ import (
 	"os"
 	"sync"
 
-	"github.com/pja237/goslmailer/internal/cmdline"
-	"github.com/pja237/goslmailer/internal/config"
-	"github.com/pja237/goslmailer/internal/connectors"
-	"github.com/pja237/goslmailer/internal/logger"
-	"github.com/pja237/goslmailer/internal/message"
-	"github.com/pja237/goslmailer/internal/version"
+	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/logger"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/internal/version"
 )
 
 var lock sync.Mutex

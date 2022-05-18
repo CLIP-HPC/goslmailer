@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pja237/goslmailer/internal/message"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
 )
 
 type spool struct {

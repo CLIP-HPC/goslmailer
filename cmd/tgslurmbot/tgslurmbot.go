@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/pja237/goslmailer/internal/cmdline"
-	"github.com/pja237/goslmailer/internal/config"
-	"github.com/pja237/goslmailer/internal/logger"
-	"github.com/pja237/goslmailer/internal/version"
+	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
+	"github.com/CLIP-HPC/goslmailer/internal/config"
+	"github.com/CLIP-HPC/goslmailer/internal/logger"
+	"github.com/CLIP-HPC/goslmailer/internal/version"
 	tele "gopkg.in/telebot.v3"
 )
 

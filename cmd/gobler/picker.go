@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pja237/goslmailer/internal/spool"
+	"github.com/CLIP-HPC/goslmailer/internal/spool"
 )
 
 // picker holds connector name string, msgcount map with {username:SpooledGobsCount} and pickerT polling period
