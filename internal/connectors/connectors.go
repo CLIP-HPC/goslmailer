@@ -18,6 +18,7 @@ type Connector interface {
 type Connectors map[string]Connector
 
 // Populate the map 'connectors' with connectors specified in config file and their instance from package.
+// Every newly developed connector must have a case block added here.
 func (c *Connectors) PopulateConnectors(conf *config.ConfigContainer, l *log.Logger) error {
 	// Iterate through map of connectors from config file.
 	for k, v := range conf.Connectors {

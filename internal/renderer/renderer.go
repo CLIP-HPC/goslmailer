@@ -12,6 +12,8 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// RenderTemplate renders the template file 'tfile' into 'buf' Buffer, using 'format' go package ('HTML' for html/template, 'text' for text/template).
+// 'j slurmjob.JobContext' and 'userid string' are wrapped in a structure to be used as template data.
 func RenderTemplate(tfile, format string, j *slurmjob.JobContext, userid string, buf *bytes.Buffer) error {
 
 	var x = struct {

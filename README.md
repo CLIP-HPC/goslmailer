@@ -31,6 +31,8 @@ sbatch --mail-type=ALL --mail-user="mailto:useremailA,msteams:usernameB,telegram
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
 
+### If you would like to contribute to this project by developing a new connector, [here](./connectors/connectorX/README.md) is a heavily annotated connector boilerplate (fully functional) to help you get started.
+
 ---
 
 ## Installation
