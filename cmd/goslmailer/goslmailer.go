@@ -32,12 +32,14 @@ func main() {
 	}
 
 	// set default paths
-	if cfg.Paths["sacct"] == "" {
-            cfg.Paths["sacct"] := "/usr/bin/sacct"
-	}
-	if cfg.Paths["sstat"] == "" {
-            cfg.Paths["sstat"] := "/usr/bin/sstat"
-	}
+        defaultpaths := map[string]string{
+            "sacct": "/usr/bin/sacct",
+            "sstat": "/usr/bin/sstat",
+        }
+
+        for key, path := range defaultpaths {
+            cfg.Paths[key] = path
+        }
 
 	// setup logger
 	if cfg.Paths["logfile"] != "" {
