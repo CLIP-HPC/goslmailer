@@ -31,6 +31,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// set default paths
+	if cfg.Paths["sacct"] == "" {
+            cfg.Paths["sacct"] := "/usr/bin/sacct"
+	}
+	if cfg.Paths["sstat"] == "" {
+            cfg.Paths["sstat"] := "/usr/bin/sstat"
+	}
+
 	// setup logger
 	if cfg.Paths["logfile"] != "" {
 		logFile, err = os.OpenFile(cfg.Paths["logfile"], os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
