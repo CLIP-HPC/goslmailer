@@ -38,12 +38,12 @@ func main() {
         }
 
         for key, path := range defaultpaths {
-            cfg.Paths[key] = path
+            cfg.Binpaths[key] = path
         }
 
 	// setup logger
-	if cfg.Paths["logfile"] != "" {
-		logFile, err = os.OpenFile(cfg.Paths["logfile"], os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if cfg.Logfile != "" {
+		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			fmt.Println("ERROR: can not open configured log file. Exiting.")
 			os.Exit(1)
@@ -72,7 +72,7 @@ func main() {
 
 	// get job statistics based on the SLURM_JOB_ID from slurmEnv struct
 	// only if job is END or FAIL(?)
-	job.GetJobStats(log, ic.CmdParams.Subject, cfg.Paths)
+	job.GetJobStats(log, ic.CmdParams.Subject, cfg.Binpaths)
 
 	// generate hints based on SlurmEnv and JobStats (e.g. "too much memory requested" or "walltime << requested queue")
 	// only if job is END or fail(?)

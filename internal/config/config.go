@@ -12,7 +12,8 @@ import (
 )
 
 type ConfigContainer struct {
-	Paths            map[string]string            `json:"paths"`
+	Logfile          string                       `json:"logfile"`
+	Binpaths         map[string]string            `json:"binpaths"`
 	DefaultConnector string                       `json:"defaultconnector"`
 	Connectors       map[string]map[string]string `json:"connectors"`
 	QosMap           map[uint64]string            `json:"qosmap"`
@@ -38,7 +39,7 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 func (cc *ConfigContainer) DumpConfig(l *log.Logger) {
 	l.Println("DUMP CONFIG:")
 	l.Printf("CONFIGURATION: %#v\n", cc)
-	l.Printf("CONFIGURATION logfile: %s\n", cc.Paths["logfile"])
+	l.Printf("CONFIGURATION logfile: %s\n", cc.Logfile)
 	l.Printf("CONFIGURATION msteams.name: %s\n", cc.Connectors["msteams"]["name"])
 	l.Println("--------------------------------------------------------------------------------")
 }
