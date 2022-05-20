@@ -44,9 +44,9 @@ func main() {
 	}
 
 	// setup logger
-	l, err := logger.SetupLogger(cfg.Logfile, "gobler")
+	l, err := logger.SetupLogger(cfg.Paths["logfile"], "gobler")
 	if err != nil {
-		log.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Logfile, err)
+		log.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Paths["logfile"], err)
 	}
 
 	l.Println("======================= Gobler start ===========================================")
