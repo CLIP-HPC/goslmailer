@@ -13,6 +13,7 @@ import (
 
 type ConfigContainer struct {
 	Logfile          string                       `json:"logfile"`
+	Binpaths         map[string]string            `json:"binpaths"`
 	DefaultConnector string                       `json:"defaultconnector"`
 	Connectors       map[string]map[string]string `json:"connectors"`
 	QosMap           map[uint64]string            `json:"qosmap"`
@@ -32,6 +33,23 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 	if err != nil {
 		return err
 	}
+
+        if cc.Binpaths == nil {
+	    cc.Binpaths = make(map[string]string)
+	}
+
+	// set default paths
+        defaultpaths := map[string]string{
+            "sacct": "/usr/bin/sacct",
+            "sstat": "/usr/bin/sstat",
+        }
+
+        for key, path := range defaultpaths {
+            if _, exists := cc.Binpaths[key]; !exists {
+                cc.Binpaths[key] = path
+            }
+        }
+
 	return nil
 }
 

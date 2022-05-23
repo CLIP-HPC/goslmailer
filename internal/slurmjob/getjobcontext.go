@@ -122,7 +122,7 @@ func (j *JobContext) IsJobFinished() bool {
 }
 
 // Get additional job statistics from external source (e.g. jobinfo or sacct)
-func (j *JobContext) GetJobStats(log *log.Logger, subject string) {
+func (j *JobContext) GetJobStats(log *log.Logger, subject string, paths map[string]string) {
 	log.Print("Start retrieving job stats")
 	log.Printf("%#v", j.SlurmEnvironment)
 	jobId := j.SlurmEnvironment.SLURM_JOBID
@@ -141,16 +141,16 @@ func (j *JobContext) GetJobStats(log *log.Logger, subject string) {
 		jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 	}
 	log.Printf("Fetch job info %s", jobId)
-	j.JobStats = *GetSacctMetrics(jobId, log)
+	j.JobStats = *GetSacctMetrics(jobId, log, paths)
 	counter := 0
 	for !IsJobFinished(j.JobStats.State) && j.JobStats.State != j.SlurmEnvironment.SLURM_JOB_STATE && counter < 5 {
 		time.Sleep(2 * time.Second)
-		j.JobStats = *GetSacctMetrics(jobId, log)
+		j.JobStats = *GetSacctMetrics(jobId, log, paths)
 		counter += 1
 	}
 	if j.JobStats.State == "RUNNING" {
 		log.Print("Update job with live stats")
-		updateJobStatsWithLiveData(&j.JobStats, jobId, log)
+		updateJobStatsWithLiveData(&j.JobStats, jobId, log, paths)
 	}
 	log.Printf("Finished retrieving job stats")
 }

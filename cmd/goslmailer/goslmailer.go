@@ -62,7 +62,7 @@ func main() {
 
 	// get job statistics based on the SLURM_JOB_ID from slurmEnv struct
 	// only if job is END or FAIL(?)
-	job.GetJobStats(log, ic.CmdParams.Subject)
+	job.GetJobStats(log, ic.CmdParams.Subject, cfg.Binpaths)
 
 	// generate hints based on SlurmEnv and JobStats (e.g. "too much memory requested" or "walltime << requested queue")
 	// only if job is END or fail(?)

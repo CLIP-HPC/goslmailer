@@ -1,5 +1,9 @@
 {
   "logfile": "/tmp/goslmailer.log",                 # if specified; append logs to this file; else; dump to stderr
+  "binpaths": {                                    # paths to required (slurm) binaries
+    "sacct":"/usr/bin/sacct",
+    "sstat":"/usr/bin/sstat"
+  },
   "defaultconnector": "msteams",                    # default connector to be used for message delivery for receivers without full 'connector:user' specification
   "connectors": {                                   # map of connector configurations
     "msteams": {                                    # each connector has it's own map of config attributes

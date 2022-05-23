@@ -200,16 +200,16 @@ func (m SacctMetrics) CalcSystemComputePercentage() float64 {
         return 0.0
 }
 
-func GetSacctMetrics(jobId string, log *log.Logger) *SacctMetrics {
-        return ParseSacctMetrics(GetSacctData(jobId, log))
+func GetSacctMetrics(jobId string, log *log.Logger, paths map[string]string) *SacctMetrics {
+        return ParseSacctMetrics(GetSacctData(jobId, log, paths))
 }
 
-func GetSstatMetrics(jobId string, log *log.Logger) *SstatMetrics {
-        return ParseSstatMetrics(GetSstatData(jobId, log))
+func GetSstatMetrics(jobId string, log *log.Logger, paths map[string]string) *SstatMetrics {
+        return ParseSstatMetrics(GetSstatData(jobId, log, paths))
 }
 
-func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, log *log.Logger) {
-        liveMetrics := GetSstatMetrics(jobId, log)
+func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, log *log.Logger, paths map[string]string) {
+        liveMetrics := GetSstatMetrics(jobId, log, paths)
         if liveMetrics.MaxRSS > 0 {
                 metrics.MaxRSS = liveMetrics.MaxRSS
         }
@@ -222,9 +222,9 @@ func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, log *log.Lo
 }
 
 // Execute the saccct command and return its output
-func GetSacctData(jobId string, log *log.Logger) []byte {
+func GetSacctData(jobId string, log *log.Logger, paths map[string]string) []byte {
         formatLine := "JobName,User,Partition,NodeList,ncpus,State,Submit,start,end,timelimit,elapsed,CPUTime,TotalCPU,UserCPU,SystemCPU,ReqMem,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode,Comment"
-        cmd := exec.Command("/usr/bin/sacct", "-j", jobId, "-n", "-p", "--format", formatLine)
+        cmd := exec.Command(paths["sacct"], "-j", jobId, "-n", "-p", "--format", formatLine)
         output, err := cmd.CombinedOutput()
         if err != nil {
                 log.Fatal(output)
@@ -232,9 +232,9 @@ func GetSacctData(jobId string, log *log.Logger) []byte {
         return output
 }
 
-func GetSstatData(jobId string, log *log.Logger) []byte {
+func GetSstatData(jobId string, log *log.Logger, paths map[string]string) []byte {
         formatLine := "JobID,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode"
-        cmd := exec.Command("/usr/bin/sstat", "-a", "-j", jobId, "-n", "-p", "--format", formatLine)
+        cmd := exec.Command(paths["sstat"], "-a", "-j", jobId, "-n", "-p", "--format", formatLine)
         output, err := cmd.CombinedOutput()
         if err != nil {
                 log.Fatal(output)
