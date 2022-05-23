@@ -34,6 +34,10 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 		return err
 	}
 
+        if cc.Binpaths == nil {
+	    cc.Binpaths = make(map[string]string)
+	}
+
 	// set default paths
         defaultpaths := map[string]string{
             "sacct": "/usr/bin/sacct",
