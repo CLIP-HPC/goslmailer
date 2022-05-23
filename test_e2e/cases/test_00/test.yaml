@@ -1,0 +1,60 @@
+init:
+  test_readme: '${twd}/README.txt'
+
+defaults:
+  message: "Running test $i from $twd"
+  systempaths:
+    - $bwd
+
+pipeline:
+
+  print_welcome:
+    description: "Current test"
+    action: workflow:print
+    style: 2
+
+  print_test_case:
+    description: "Test README"
+    action: workflow:print
+    message: $Cat('${test_readme}')
+
+  deploy_conf_files:
+    action: storage:copy
+    suffix: .conf
+    source:
+      URL: $twd/conf
+    dest:
+      URL: /tmp
+
+  run_goslmailer:
+    action: exec:run
+    checkError: true
+    env:
+      GOSLMAILER_CONF: /tmp/doesntexist.conf
+    success:
+      - "conf: no such file"
+    commands: 
+      - goslmailer
+      - gobler
+      - tgslurmbot
+
+  test_assert:
+    action: validator:assert
+    expect: 
+      - '/conf: no such file/'
+      - '/conf: no such file/'
+      - '/conf: no such file/'
+    actual: 
+      - $run_goslmailer.Cmd[0].Stdout
+      - $run_goslmailer.Cmd[1].Stdout
+      - $run_goslmailer.Cmd[2].Stdout
+
+        #  debug_gosl:
+        #    action: workflow:print
+        #    message: $AsJSON($run_goslmailer)
+
+        #  catch:
+        #    description: "ERROR CAUGHT BUT GOOD!"
+        #    action: workflow:print
+        #    message: CAUGHT $error.Error
+

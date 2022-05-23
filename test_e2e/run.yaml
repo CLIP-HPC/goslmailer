@@ -1,0 +1,43 @@
+# defaults node defines attributes that will be merge with every executable node.
+# here, message will be used throughout the workflow wherever it's not specified
+defaults:
+init:
+
+pipeline:
+
+  test_false:
+    action: exec:run
+    checkError: true
+    commands:
+      - /bin/false
+
+  tests:
+    range: 0..01
+    subPath: cases/test_${index}
+    template:
+      setup_print:
+        action: workflow:print
+        message: "Running case ${index} on path $path"
+      
+      run_test:
+        action: workflow:run
+        request: '@cases/test_${index}/test'
+        params:
+          i: $index
+          twd: cases/test_${index}    # test working directory
+          bwd: $WorkingDirectory(../) # binary working directory
+
+          #do_assertions:
+          #  action: workflow:print
+          #  message: do_assertions
+
+  #task_assert:
+  #  test_run_action:
+  #    action: exec:run
+  #    commands:
+  #      - /usr/bin/hostname
+  #      - echo "Hello!"
+
+          #defer:
+          #  action: print
+          #  message: allway run

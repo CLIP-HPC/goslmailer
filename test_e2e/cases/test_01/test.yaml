@@ -1,0 +1,93 @@
+init:
+  test_readme: '${twd}/README.txt'
+
+defaults:
+  message: "Running test $i from $twd"
+  systempaths:
+    - $bwd
+
+pipeline:
+
+  print_welcome:
+    description: "Current test"
+    action: workflow:print
+    style: 2
+
+  print_test_case:
+    description: "Test README"
+    action: workflow:print
+    message: $Cat('${test_readme}')
+
+  deploy_conf_files:
+    action: storage:copy
+    suffix: .conf
+    source:
+      URL: $twd/conf
+    dest:
+      URL: /tmp
+
+  deploy_sacct_files:
+    action: storage:copy
+    source:
+      URL: $twd/sacct
+    dest:
+      URL: /tmp
+
+  run_goslmailer:
+    action: exec:run
+    checkError: true
+    env:
+      GOSLMAILER_CONF: /tmp/goslmailer.conf
+    commands: 
+      - source $twd/slurm_env/slurmenv.sh
+      - goslmailer -s "slurm job x" pja
+
+  test_assert_goslmailer:
+    action: validator:assert
+    expect: 
+      - '/Deposit gob OK!/'
+    actual: 
+      - $run_goslmailer.Output
+
+  run_gobler:
+    action: process:start
+    watch: true
+    immuneToHangups: true
+    command: gobler -c /tmp/gobler.conf
+    timeoutMs: 10000
+
+  run_sleep:
+    action: exec:run
+    checkError: true
+    commands: 
+      - sleep 5
+
+  stop_gobler:
+    action: process:stop
+    pid: $run_gobler.Pid
+
+    #  debug_gobler:
+    #    action: workflow:print
+    #    message: $AsJSON($run_gobler)
+
+  # https://github.com/viant/assertly#validation
+  test_assert_gobler:
+    action: validator:assert
+    expect: 
+      - '~/SENDER msteams#\d: Gob deleted/'
+    actual: 
+      - $run_gobler.Stdout
+
+  # todo: 
+  #   add test:
+  #     jq . rendered.json >/dev/null || echo FAILED
+
+        #  debug_gosl:
+        #    action: workflow:print
+        #    message: $AsJSON($run_goslmailer)
+
+        #  catch:
+        #    description: "ERROR CAUGHT BUT GOOD!"
+        #    action: workflow:print
+        #    message: CAUGHT $error.Error
+
