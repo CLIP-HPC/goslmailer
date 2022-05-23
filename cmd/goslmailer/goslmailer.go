@@ -13,6 +13,8 @@ import (
 	"github.com/CLIP-HPC/goslmailer/internal/version"
 )
 
+const goslmailer_config_file = "/etc/slurm/goslmailer.conf"
+
 func main() {
 
 	var (
@@ -23,9 +25,12 @@ func main() {
 	)
 
 	// read configuration
-	// how to handle hardcoding config file?
+	cf, pres := os.LookupEnv("GOSLMAILER_CONF")
+	if !pres || cf == "" {
+		cf = goslmailer_config_file
+	}
 	cfg := config.NewConfigContainer()
-	err := cfg.GetConfig("/etc/slurm/goslmailer.conf")
+	err := cfg.GetConfig(cf)
 	if err != nil {
 		fmt.Printf("getConfig failed: %s", err)
 		os.Exit(1)
