@@ -31,16 +31,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// set default paths
-        defaultpaths := map[string]string{
-            "sacct": "/usr/bin/sacct",
-            "sstat": "/usr/bin/sstat",
-        }
-
-        for key, path := range defaultpaths {
-            cfg.Binpaths[key] = path
-        }
-
 	// setup logger
 	if cfg.Logfile != "" {
 		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
