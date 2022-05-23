@@ -4,6 +4,10 @@
 #SHELL =
 #.SHELLFLAGS =
 
+# endly version
+# https://github.com/viant/endly
+endly_version=0.52.0
+
 # Inject into binary via linker:
 # ...in github actions comes from make -e version=git_ref
 version=$(shell cat VERSION)
@@ -24,7 +28,7 @@ config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
 # can be replaced with go test ./... construct
 testdirs=$(sort $(dir $(shell find ./ -name *_test.go)))
 
-all: list test build install
+all: list test build test_endly install
 
 list:
 	@echo "================================================================================"
@@ -63,6 +67,16 @@ test:
 	@echo "********************************************************************************"
 	go test -v -count=1 ./...
 
+get_endly:
+	curl -L -O https://github.com/viant/endly/releases/download/v$(endly_version)/endly_linux_$(endly_version).tar.gz
+	tar -C test_e2e/ -xzf endly_linux_$(endly_version).tar.gz
+
+test_endly:
+	cd test_e2e
+	./endly
+
 clean:
 	rm $(bins)
 	rm -rf $(installdir)
+	rm endly_linux_$(endly_version).tar.gz
+	rm test_e2e/endly
