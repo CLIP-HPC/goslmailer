@@ -11,32 +11,22 @@ pipeline:
   print_welcome:
     description: "Current test"
     action: workflow:print
-    style: 2
+    style: 1
 
   print_test_case:
     description: "Test README"
     action: workflow:print
     message: $Cat('${test_readme}')
 
-  deploy_conf_files:
-    action: storage:copy
-    suffix: .conf
-    source:
-      URL: $twd/conf
-    dest:
-      URL: /tmp
-
   run_goslmailer:
     action: exec:run
-    checkError: true
+    checkError: false
     env:
       GOSLMAILER_CONF: /tmp/doesntexist.conf
-    success:
-      - "conf: no such file"
     commands: 
       - goslmailer
-      - gobler
-      - tgslurmbot
+      - gobler -c /tmp/doesntexist.conf
+      - tgslurmbot -c /tmp/doesntexist.conf
 
   test_assert:
     action: validator:assert

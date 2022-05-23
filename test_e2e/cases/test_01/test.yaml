@@ -11,7 +11,7 @@ pipeline:
   print_welcome:
     description: "Current test"
     action: workflow:print
-    style: 2
+    style: 1
 
   print_test_case:
     description: "Test README"
@@ -20,7 +20,6 @@ pipeline:
 
   deploy_conf_files:
     action: storage:copy
-    suffix: .conf
     source:
       URL: $twd/conf
     dest:
@@ -74,8 +73,10 @@ pipeline:
   test_assert_gobler:
     action: validator:assert
     expect: 
+      - '~/Send successful to file: rendered-1051492-pja-/'
       - '~/SENDER msteams#\d: Gob deleted/'
     actual: 
+      - $run_gobler.Stdout
       - $run_gobler.Stdout
 
   # todo: 

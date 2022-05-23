@@ -4,14 +4,7 @@ defaults:
 init:
 
 pipeline:
-
-  test_false:
-    action: exec:run
-    checkError: true
-    commands:
-      - /bin/false
-
-  tests:
+  loop_over_tests:
     range: 0..01
     subPath: cases/test_${index}
     template:
