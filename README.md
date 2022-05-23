@@ -1,5 +1,8 @@
 # goslmailer
 
+> **Warning**
+> Currently goslmailer will only work on SLURM >= 21.08.x 
+
 ## Drop-in notification delivery solution for slurm that can do...
 
 * message delivery to: **msteams**, **telegram**, **e-mail**
