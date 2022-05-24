@@ -1,0 +1,63 @@
+init:
+  test_readme: '${twd}/README.md'
+
+defaults:
+  message: "Running test $i from $twd"
+  systempaths:
+    - $bwd
+
+pipeline:
+
+  print_welcome:
+    description: "Current test"
+    action: workflow:print
+    style: 1
+
+  deploy_conf_files:
+    action: storage:copy
+    source:
+      URL: $twd/conf
+    dest:
+      URL: /tmp
+
+  deploy_sacct_files:
+    action: storage:copy
+    source:
+      URL: $twd/sacct
+    dest:
+      URL: /tmp
+
+  run_goslmailer:
+    action: exec:extract
+    checkError: true
+    env:
+      GOSLMAILER_CONF: /tmp/goslmailer.conf
+    commands: 
+      - command: source $twd/slurm_env/slurmenv.sh
+      - command: goslmailer -s "Slurm Job_id=1052477 Name=endlyJobFail Failed, Run time 00:00:30, FAILED, ExitCode 1" petar.jager@imba.oeaw.ac.at
+        extract:
+        - key: rfile
+          regExpr: 'Send successful to file: (rendered-1052477-petar.jager@imba.oeaw.ac.at-\d+.json)'
+          required: true
+
+  debug_extract:
+    action: workflow:print
+    message: "GOT: $rfile"
+
+  test_diff:
+    action: exec:run
+    checkError: true
+    commands:
+    - sed -i -e '/"text":"Created /d' $WorkingDirectory()/$rfile
+    - diff $WorkingDirectory()/$rfile $twd/results/*.json && echo RESULTS MATCH
+
+  test_assert_goslmailer:
+    action: validator:assert
+    expect: 
+      - '~/Send successful to file: rendered-1052477-petar.jager@imba.oeaw.ac.at-\d+.json/'
+    actual: 
+      - $run_goslmailer.Output
+
+  # todo: 
+  #   add test:
+  #     jq . rendered.json > /dev/null || echo FAILED

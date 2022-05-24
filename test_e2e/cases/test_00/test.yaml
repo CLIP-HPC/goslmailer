@@ -1,5 +1,4 @@
 init:
-  test_readme: '${twd}/README.txt'
 
 defaults:
   message: "Running test $i from $twd"
@@ -12,11 +11,6 @@ pipeline:
     description: "Current test"
     action: workflow:print
     style: 1
-
-  print_test_case:
-    description: "Test README"
-    action: workflow:print
-    message: $Cat('${test_readme}')
 
   run_goslmailer:
     action: exec:run

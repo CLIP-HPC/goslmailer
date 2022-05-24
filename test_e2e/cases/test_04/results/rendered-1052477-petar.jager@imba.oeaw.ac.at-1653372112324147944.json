@@ -34,15 +34,14 @@
                   {
                     "type":"TextBlock",
                     "weight":"bolder",
-                    "text":"{{ .Job.MailSubject }} {{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}",
+                    "text":"Job 1052477 Failed",
                     "wrap":true,
                     "size":"Large",
-                    {{ if or (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "FAILED") (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "TIMEOUT") ((eq .Job.SlurmEnvironment.SLURM_JOB_STATE "OUT_OF_MEMORY")) }}"color":"Attention"{{ else }}"color":"Good"{{ end }}
+                    "color":"Attention"
                   },
                   {
                     "type":"TextBlock",
                     "spacing":"none",
-                    "text":"Created {{ .Created }}",
 
                     "isSubtle":true,
                     "wrap":true
@@ -52,17 +51,7 @@
               }
             ]
           },
-          {{ if ne .Job.PrunedMessageCount 0 }}
-          {
-            "type":"TextBlock",
-            "size":"medium",
-            "weight":"bolder",
-            "text":"WARNING: Rate limiting triggered. {{ .Job.PrunedMessageCount }} additonal notificiations have been suppressed",
-            "style":"heading",
-            "wrap":true,
-            "color":"Attention"
-          },
-          {{ end }}
+          
           {
             "type":"FactSet",
             "separator":true,
@@ -73,123 +62,144 @@
               {
                 "type":"Fact",
                 "title":"Job name",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NAME }}"
+                "value":"endlyJobFail"
               },
               {
                 "type":"Fact",
                 "title":"Job ID",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_ID }}"
+                "value":"1052477"
               },
               {
                 "type":"Fact",
                 "title":"User",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
+                "value":"petar.jager"
               },
               {
                 "type":"Fact",
                 "title":"Partition",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_PARTITION }}"
+                "value":"c"
               },
               {
                 "type":"Fact",
                 "title":"Compute Nodes Used",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NODELIST }}"
+                "value":"stg-c2-0"
               },
               {
                 "type":"Fact",
                 "title":"Cores",
-                "value":"{{ .Job.JobStats.Ncpus }}"
+                "value":"1"
               },
               {
                 "type":"Fact",
                 "title":"Job state",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_STATE }}"
+                "value":"FAILED"
               },
-              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING"}}
+              
               {
                 "type":"Fact",
                 "title":"Exit Code",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_EXIT_CODE_MAX }}"
+                "value":"1"
               },
-              {{ end }}
+              
               {
                 "type":"Fact",
                 "title":"Submit",
-                "value":"{{ .Job.JobStats.Submittime }}"
+                "value":"2022-05-24T07:43:07"
               },
               {
                 "type":"Fact",
                 "title":"Start",
-                "value":"{{ .Job.JobStats.Starttime }}"
+                "value":"2022-05-24T07:43:07"
               },
-              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING"}}
+              
               {
                 "type":"Fact",
                 "title":"End",
-                "value":"{{ .Job.JobStats.Endtime }}"
+                "value":"2022-05-24T07:43:37"
               },
-              {{ end }}
+              
               {
                 "type":"Fact",
                 "title":"Reserved Walltime",
-                "value":"{{ .Job.JobStats.WalltimeStr }}"
+                "value":"08:00:00"
               },
-              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE "Began" }}
+              
               {
                 "type":"Fact",
                 "title":"Used Walltime",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+                "value":"00:00:30"
               },
-              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING" }}
+              
               {
                 "type":"Fact",
                 "title":"Used CPU time",
-                "value":"{{ .Job.JobStats.TotalCPUStr }}"
+                "value":"00:00.007"
               },
               {
                 "type":"Fact",
                 "title":"% User (Computation)",
-                "value":'{{ printf "%5.2f%%" .Job.JobStats.CalcUserComputePercentage }}'
+                "value":'28.57%'
               },
               {
                 "type":"Fact",
                 "title":"% System (I/O)",
-                "value":'{{ printf "%5.2f%%" .Job.JobStats.CalcSystemComputePercentage }}'
+                "value":'71.43%'
               },
-              {{ end }}
-              {{ end }}
+              
+              
               {
                 "type":"Fact",
                 "title":"Memory Requested",
-                "value":"{{ .Job.JobStats.ReqMem | humanBytes }}"
+                "value":"4.3 GB"
               },
-              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE "Began" }}
+              
               {
                 "type":"Fact",
                 "title":"Max Memory Used",
-                "value":"{{ .Job.JobStats.MaxRSS | humanBytes }}"
+                "value":"352 kB"
               },
               {
                 "type":"Fact",
                 "title":"Max Disk Write",
-                "value":"{{ .Job.JobStats.MaxDiskWrite | humanBytes }}"
+                "value":"0 B"
               },
               {
                 "type":"Fact",
                 "title":"Max Disk Read",
-                "value":"{{ .Job.JobStats.MaxDiskRead | humanBytes }}"
+                "value":"10 kB"
               }
-              {{ end }}
+              
             ]
           },
-          {{ range .Job.Hints }}
+          
           {
             "type":"TextBlock",
-            "text":"{{ . }}",
+            "text":"TIP: Please consider lowering the ammount of requested memory in the future, your job has consumed less then half of the requested memory.",
             "wrap":true,
             "color":"Attention"
           },
-          {{ end }}
+          
+          {
+            "type":"TextBlock",
+            "text":"TIP: Please consider lowering the amount of requested CPU cores in the future, your job has consumed less than half of requested CPU cores",
+            "wrap":true,
+            "color":"Attention"
+          },
+          
+          {
+            "type":"TextBlock",
+            "text":"TIP: Your job was submitted to SHORT QOS and finished within half of the requested walltime. Consider submitting it to the RAPID QOS instead",
+            "wrap":true,
+            "color":"Attention"
+          },
+          
+          {
+            "type":"TextBlock",
+            "text":"TIP: No --time specified: Using default SHORT QOS limit. Specify --time to increase the chances that the scheduler will use this job for backfilling purposes",
+            "wrap":true,
+            "color":"Attention"
+          },
+          
           {
             "type":"FactSet",
             "separator":true,
@@ -200,12 +210,12 @@
               {
                 "type":"Fact",
                 "title":"User",
-                "value":"<at>{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}</at>"
+                "value":"<at>petar.jager</at>"
               },
               {
                 "type":"Fact",
                 "title":"JobStatus",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}"
+                "value":"Failed"
               }
             ]
           }
@@ -223,10 +233,10 @@
           "entities":[
             {
               "type":"mention",
-              "text":"<at>{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}</at>",
+              "text":"<at>petar.jager</at>",
               "mentioned":{
-              "id":"{{ .UserID }}",
-              "name":"{{ .Job.SlurmEnvironment.SLURM_JOB_USER }}"
+              "id":"petar.jager@imba.oeaw.ac.at",
+              "name":"petar.jager"
               }
             }
           ]
@@ -235,4 +245,3 @@
     }
   ]
 }
-

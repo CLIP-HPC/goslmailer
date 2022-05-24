@@ -5,13 +5,19 @@ init:
 
 pipeline:
   loop_over_tests:
-    range: 0..01
+    range: 0..04
     subPath: cases/test_${index}
     template:
+
       setup_print:
         action: workflow:print
         message: "Running case ${index} on path $path"
       
+      print_test_case:
+        description: "Test $index README"
+        action: workflow:print
+        message: $Cat('cases/test_${index}/README.md')
+
       run_test:
         action: workflow:run
         request: '@cases/test_${index}/test'

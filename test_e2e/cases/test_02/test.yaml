@@ -1,4 +1,5 @@
 init:
+  test_readme: '${twd}/README.md'
 
 defaults:
   message: "Running test $i from $twd"
@@ -59,30 +60,12 @@ pipeline:
     action: process:stop
     pid: $run_gobler.Pid
 
-    #  debug_gobler:
-    #    action: workflow:print
-    #    message: $AsJSON($run_gobler)
-
   # https://github.com/viant/assertly#validation
   test_assert_gobler:
     action: validator:assert
     expect: 
-      - '~/Send successful to file: rendered-1051492-pja-/'
+      - '~/Send successful to file: rendered-\d*-pja-/'
       - '~/SENDER msteams#\d: Gob deleted/'
     actual: 
       - $run_gobler.Stdout
       - $run_gobler.Stdout
-
-  # todo: 
-  #   add test:
-  #     jq . rendered.json >/dev/null || echo FAILED
-
-        #  debug_gosl:
-        #    action: workflow:print
-        #    message: $AsJSON($run_goslmailer)
-
-        #  catch:
-        #    description: "ERROR CAUGHT BUT GOOD!"
-        #    action: workflow:print
-        #    message: CAUGHT $error.Error
-
