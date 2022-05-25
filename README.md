@@ -1,7 +1,10 @@
 # goslmailer
 
 > **Warning**
-> Currently goslmailer will only work on SLURM >= 21.08.x 
+> Currently goslmailer will only work on SLURM >= 21.08.x
+> 
+> Work in progress to support older versions of SLURM is tracked here:
+https://github.com/CLIP-HPC/goslmailer/issues/4
 
 ## Drop-in notification delivery solution for slurm that can do...
 
