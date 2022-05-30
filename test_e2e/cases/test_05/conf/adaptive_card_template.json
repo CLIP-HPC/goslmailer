@@ -1,0 +1,237 @@
+{
+  "type":"message",
+  "attachments":[
+    {
+      "contentType":"application/vnd.microsoft.card.adaptive",
+      "content":{
+        "type":"AdaptiveCard",
+        "body":[
+          {
+            "type":"TextBlock",
+            "size":"medium",
+            "weight":"bolder",
+            "text":"CBE Slurm job info",
+            "style":"heading"
+          },
+          {
+            "type":"ColumnSet",
+            "columns":[
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"Image",
+                    "style":"person",
+                    "url":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/590px-Slurm_logo.svg.png",
+                    "size":"small"
+                  }
+                ],
+                "width":"auto"
+              },
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"TextBlock",
+                    "weight":"bolder",
+                    "text":"{{ .Job.MailSubject }} {{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}",
+                    "wrap":true,
+                    "size":"Large",
+                    {{ if or (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "FAILED") (eq .Job.SlurmEnvironment.SLURM_JOB_STATE "TIMEOUT") ((eq .Job.SlurmEnvironment.SLURM_JOB_STATE "OUT_OF_MEMORY")) }}"color":"Attention"{{ else }}"color":"Good"{{ end }}
+                  },
+                  {
+                    "type":"TextBlock",
+                    "spacing":"none",
+                    "text":"Created {{ .Created }}",
+
+                    "isSubtle":true,
+                    "wrap":true
+                  }
+                ],
+                "width":"stretch"
+              }
+            ]
+          },
+          {{ if ne .Job.PrunedMessageCount 0 }}
+          {
+            "type":"TextBlock",
+            "size":"medium",
+            "weight":"bolder",
+            "text":"WARNING: Rate limiting triggered. {{ .Job.PrunedMessageCount }} additonal notificiations have been suppressed",
+            "style":"heading",
+            "wrap":true,
+            "color":"Attention"
+          },
+          {{ end }}
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"true",
+            "id":"ExternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"Job name",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_NAME }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Job ID",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_ID }}"
+              },
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"{{ .Job.JobStats.User }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Partition",
+                "value":"{{ .Job.JobStats.Partition }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Compute Nodes Used",
+                "value":"{{ .Job.JobStats.NodeList }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Cores",
+                "value":"{{ .Job.JobStats.Ncpus }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Job state",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_STATE }}"
+              },
+              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING"}}
+              {
+                "type":"Fact",
+                "title":"Exit Code",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_EXIT_CODE_MAX }}"
+              },
+              {{ end }}
+              {
+                "type":"Fact",
+                "title":"Submit",
+                "value":"{{ .Job.JobStats.Submittime }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Start",
+                "value":"{{ .Job.JobStats.Starttime }}"
+              },
+              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING"}}
+              {
+                "type":"Fact",
+                "title":"End",
+                "value":"{{ .Job.JobStats.Endtime }}"
+              },
+              {{ end }}
+              {
+                "type":"Fact",
+                "title":"Reserved Walltime",
+                "value":"{{ .Job.JobStats.WalltimeStr }}"
+              },
+              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE "Began" }}
+              {
+                "type":"Fact",
+                "title":"Used Walltime",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+              },
+              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING" }}
+              {
+                "type":"Fact",
+                "title":"Used CPU time",
+                "value":"{{ .Job.JobStats.TotalCPUStr }}"
+              },
+              {
+                "type":"Fact",
+                "title":"% User (Computation)",
+                "value":'{{ printf "%5.2f%%" .Job.JobStats.CalcUserComputePercentage }}'
+              },
+              {
+                "type":"Fact",
+                "title":"% System (I/O)",
+                "value":'{{ printf "%5.2f%%" .Job.JobStats.CalcSystemComputePercentage }}'
+              },
+              {{ end }}
+              {{ end }}
+              {
+                "type":"Fact",
+                "title":"Memory Requested",
+                "value":"{{ .Job.JobStats.ReqMem | humanBytes }}"
+              },
+              {{ if ne .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE "Began" }}
+              {
+                "type":"Fact",
+                "title":"Max Memory Used",
+                "value":"{{ .Job.JobStats.MaxRSS | humanBytes }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Max Disk Write",
+                "value":"{{ .Job.JobStats.MaxDiskWrite | humanBytes }}"
+              },
+              {
+                "type":"Fact",
+                "title":"Max Disk Read",
+                "value":"{{ .Job.JobStats.MaxDiskRead | humanBytes }}"
+              }
+              {{ end }}
+            ]
+          },
+          {{ range .Job.Hints }}
+          {
+            "type":"TextBlock",
+            "text":"{{ . }}",
+            "wrap":true,
+            "color":"Attention"
+          },
+          {{ end }}
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"false",
+            "id":"InternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"<at>{{ .Job.JobStats.User }}</at>"
+              },
+              {
+                "type":"Fact",
+                "title":"JobStatus",
+                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}"
+              }
+            ]
+          }
+        ],
+        "actions":[
+          {
+            "type":"Action.OpenUrl",
+            "title":"View Google",
+            "url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          }
+        ],
+        "$schema":"http://adaptivecards.io/schemas/adaptive-card.json",
+        "version":"1.2",
+        "msteams":{
+          "entities":[
+            {
+              "type":"mention",
+              "text":"<at>{{ .Job.JobStats.User }}</at>",
+              "mentioned":{
+              "id":"{{ .UserID }}",
+              "name":"{{ .Job.JobStats.User }}"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

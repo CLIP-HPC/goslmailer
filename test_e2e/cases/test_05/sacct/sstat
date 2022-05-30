@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cwd=`dirname $0`
+cat ${cwd}/sstat_$2.txt

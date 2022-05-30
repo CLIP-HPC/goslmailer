@@ -29,43 +29,16 @@ pipeline:
 
   run_goslmailer:
     action: exec:run
-    checkError: true
+    checkError: false
     env:
       GOSLMAILER_CONF: /tmp/goslmailer.conf
-    commands: 
+    commands:
       - source $twd/slurm_env/slurmenv.sh
-      - goslmailer -s "slurm job x" pja
+      - goslmailer -s "Slurm Job_id=39766384 Name=job Began, Queued time 2-00:04:18" pja
 
   test_assert_goslmailer:
     action: validator:assert
-    expect: 
-      - '/Deposit gob OK!/'
-    actual: 
+    expect:
+      - '/Unable to retrieve job stats. Error: Failed to execute sacct command: exit status 1/'
+    actual:
       - $run_goslmailer.Output
-
-  run_gobler:
-    action: process:start
-    watch: true
-    immuneToHangups: true
-    command: gobler -c /tmp/gobler.conf
-    timeoutMs: 5000
-
-  run_sleep:
-    action: exec:run
-    checkError: true
-    commands: 
-      - sleep 5
-
-  stop_gobler:
-    action: process:stop
-    pid: $run_gobler.Pid
-
-  # https://github.com/viant/assertly#validation
-  test_assert_gobler:
-    action: validator:assert
-    expect: 
-      - '~/Send successful to file: rendered-\d*-pja-/'
-      - '~/SENDER msteams#\d: Gob deleted/'
-    actual: 
-      - $run_gobler.Stdout
-      - $run_gobler.Stdout
