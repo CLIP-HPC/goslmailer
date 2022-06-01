@@ -1,0 +1,44 @@
+init:
+  test_readme: '${twd}/README.md'
+
+defaults:
+  message: "Running test $i from $twd"
+  systempaths:
+    - $bwd
+
+pipeline:
+
+  print_welcome:
+    description: "Current test"
+    action: workflow:print
+    style: 1
+
+  deploy_conf_files:
+    action: storage:copy
+    source:
+      URL: $twd/conf
+    dest:
+      URL: /tmp
+
+  deploy_sacct_files:
+    action: storage:copy
+    source:
+      URL: $twd/sacct
+    dest:
+      URL: /tmp
+
+  run_goslmailer:
+    action: exec:run
+    checkError: false
+    env:
+      GOSLMAILER_CONF: /tmp/goslmailer.conf
+    commands:
+      - source $twd/slurm_env/slurmenv.sh
+      - goslmailer -s "Slurm Job_id=39766384 Name=job Began, Queued time 2-00:04:18" pja
+
+  test_assert_goslmailer:
+    action: validator:assert
+    expect:
+      - '/Unable to retrieve job stats. Error: failed to execute sacct command: exit status 1/'
+    actual:
+      - $run_goslmailer.Output

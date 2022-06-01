@@ -1,4 +1,0 @@
-* sacct comes from config
-* template config to point to /tmp/sacct script
-* copy sacct/* folder there
-* goslmailer: get conf path from env var GOSLMAILER_CONFIG, else default /etc/slurm/goslmailer.conf

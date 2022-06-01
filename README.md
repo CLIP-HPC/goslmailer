@@ -1,10 +1,9 @@
 # goslmailer
 
-> **Warning**
-> Currently goslmailer will only work on SLURM >= 21.08.x
-> 
-> Work in progress to support older versions of SLURM is tracked here:
-https://github.com/CLIP-HPC/goslmailer/issues/4
+> **Info**
+> Now also works with SLURM < 21.08
+>
+> For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
 
 ## Drop-in notification delivery solution for slurm that can do...
 
@@ -21,7 +20,7 @@ https://github.com/CLIP-HPC/goslmailer/issues/4
 **Goslmailer** (GoSlurmMailer) is a drop-in replacement [MailProg](https://slurm.schedmd.com/slurm.conf.html#OPT_MailProg) for [slurm](https://slurm.schedmd.com/).
 
 
-With goslmailer configured as as the slurm mailer, 
+With goslmailer configured as as the slurm mailer,
 
 ```
 MailProg                = /usr/bin/goslmailer
@@ -43,13 +42,44 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ## Installation
 
+### Build
+
+#### Quick version, without end to end testing
+
+```
+git clone https://github.com/CLIP-HPC/goslmailer.git
+make test
+make build
+make install
+```
+
+#### Slightly more involved, with end to end testing:
+
+Prerequisites:
+
+1. generated RSA keypair (passwordless) (`ssh-keygen -t rsa`)
+2. `ssh $USER@localhost` must work without password
+
+Known caveats:
+
+* redhat/centos: must have lsb_release binary installed, package: `redhat-lsb-core`
+* ubuntu 22: `set enable-bracketed-paste off` present in `~/.inputrc`
+* maybe/maybe not, depends if you see failed tests: `export TERM=dumb` in `~/.bashrc` :)
+
+```
+# downloads endly binary and runs endly tests
+make 
+```
+
+
 ### goslmailer
 
 * place binary to the path of your liking
-* place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf`
+* place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf` (default path)
+  * OR: anywhere else, but then run the binary with `GOSLMAILER_CONF=/path/to/gosl.conf` in environment
 * point slurm `MailProg` to the binary
 
-### gobler 
+### gobler
 
 * place binary to the path of your liking
 * place [gobler.conf](cmd/gobler/gobler.conf) to the path of your liking
@@ -74,7 +104,7 @@ See each connector details below...
 
 ## Spooling and throttling of messages - gobler service
 
-In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive. 
+In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive.
 For these environments goslmailer can be configured to spool messages from certain connectors on disk, to be later processed by the **gobler** service.
 
 
@@ -86,7 +116,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 `connector monitor` in turn spins up 3 goroutines: `monitor`, `picker` and `numSenders` x `sender`.
 
-* **monitor** : 
+* **monitor** :
   * every `monitorT` seconds (or milliseconds) scans the `spoolDir` for new messages and sends them to the **picker**
 
 * **picker**  :
@@ -105,7 +135,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 ## Connectors
 
-### default connector 
+### default connector
 
 Specifies which receiver scheme is the default one, in case when user didn't specify `--mail-user` and slurm sent a bare username.
 
@@ -125,6 +155,13 @@ With connector parameters, you can:
 * template message body
 * allowList the recipients
 
+To make sure that mutt properly renders the HTML email, add following lines to `/etc/Muttrc.local`
+
+```
+# Local configuration for Mutt.
+set content_type="text/html"
+```
+
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 
 ---
@@ -135,9 +172,9 @@ Sends **1on1** or **group chat** messages about jobs via [telegram messenger app
 
 ![Telegram card](./images/telegram.png)
 
-Prerequisites for the telegram connector: 
+Prerequisites for the telegram connector:
 
-1. a telegram bot must be created and 
+1. a telegram bot must be created and
 2. the bot daemon service **tgslumbot** must be running.
 
 Site admins can [create a telegram bot](https://core.telegram.org/bots#6-botfather) by messaging [botfather](https://t.me/botfather).

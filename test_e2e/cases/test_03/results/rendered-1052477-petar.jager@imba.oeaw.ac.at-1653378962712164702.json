@@ -1,0 +1,168 @@
+{
+  "type":"message",
+  "attachments":[
+    {
+      "contentType":"application/vnd.microsoft.card.adaptive",
+      "content":{
+        "type":"AdaptiveCard",
+        "body":[
+          {
+            "type":"TextBlock",
+            "size":"medium",
+            "weight":"bolder",
+            "text":"CBE Slurm job info",
+            "style":"heading"
+          },
+          {
+            "type":"ColumnSet",
+            "columns":[
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"Image",
+                    "style":"person",
+                    "url":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/590px-Slurm_logo.svg.png",
+                    "size":"small"
+                  }
+                ],
+                "width":"auto"
+              },
+              {
+                "type":"Column",
+                "items":[
+                  {
+                    "type":"TextBlock",
+                    "weight":"bolder",
+                    "text":"Job 1052477 Began",
+                    "wrap":true,
+                    "size":"Large",
+                    "color":"Good"
+                  },
+                  {
+                    "type":"TextBlock",
+                    "spacing":"none",
+
+                    "isSubtle":true,
+                    "wrap":true
+                  }
+                ],
+                "width":"stretch"
+              }
+            ]
+          },
+          
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"true",
+            "id":"ExternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"Job name",
+                "value":"endlyJobStart"
+              },
+              {
+                "type":"Fact",
+                "title":"Job ID",
+                "value":"1052477"
+              },
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"petar.jager"
+              },
+              {
+                "type":"Fact",
+                "title":"Partition",
+                "value":"c"
+              },
+              {
+                "type":"Fact",
+                "title":"Compute Nodes Used",
+                "value":"stg-c2-0"
+              },
+              {
+                "type":"Fact",
+                "title":"Cores",
+                "value":"1"
+              },
+              {
+                "type":"Fact",
+                "title":"Job state",
+                "value":"RUNNING"
+              },
+              
+              {
+                "type":"Fact",
+                "title":"Submit",
+                "value":"2022-05-24T07:43:07"
+              },
+              {
+                "type":"Fact",
+                "title":"Start",
+                "value":"2022-05-24T07:43:07"
+              },
+              
+              {
+                "type":"Fact",
+                "title":"Reserved Walltime",
+                "value":"08:00:00"
+              },
+              
+              {
+                "type":"Fact",
+                "title":"Memory Requested",
+                "value":"4.3 GB"
+              },
+              
+            ]
+          },
+          
+          {
+            "type":"FactSet",
+            "separator":true,
+            "spacing":"large",
+            "isVisible":"false",
+            "id":"InternalData",
+            "facts":[
+              {
+                "type":"Fact",
+                "title":"User",
+                "value":"<at>petar.jager</at>"
+              },
+              {
+                "type":"Fact",
+                "title":"JobStatus",
+                "value":"Began"
+              }
+            ]
+          }
+        ],
+        "actions":[
+          {
+            "type":"Action.OpenUrl",
+            "title":"View Google",
+            "url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          }
+        ],
+        "$schema":"http://adaptivecards.io/schemas/adaptive-card.json",
+        "version":"1.2",
+        "msteams":{
+          "entities":[
+            {
+              "type":"mention",
+              "text":"<at>petar.jager</at>",
+              "mentioned":{
+              "id":"petar.jager@imba.oeaw.ac.at",
+              "name":"petar.jager"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 package slurmjob
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -111,7 +113,8 @@ func IsJobFinished(jobState string) bool {
 		"FAILED",
 		"COMPLETED",
 		"OUT_OF_MEMORY",
-		"TIMEOUT":
+		"TIMEOUT",
+		"Mixed":
 		return true
 	}
 	return false
@@ -121,36 +124,119 @@ func (j *JobContext) IsJobFinished() bool {
 	return IsJobFinished(j.SlurmEnvironment.SLURM_JOB_STATE)
 }
 
+// Parse a subject line string and return a partial filled SlurmEnvirinment struct
+// throw error if parsing failes
+func parseSubjectLine(subject string) (*SlurmEnvironment, error) {
+	rJob, _ := regexp.Compile(`^Slurm Job_id=(?P<JobId>\d+) Name=(?P<JobName>.*) (?P<MailType>\w+), \w+ time .+?(?:, (?P<JobState>\w+), ExitCode (?P<ExitCode>\d))?$`)
+	asJob, _ := regexp.Compile(`^Slurm Array Summary Job_id=.+ \((\d+)\) Name=(?P<JobName>.*) (?P<MailType>\w+)(?:, (?P<JobState>\w+), \w+ \[(?P<ExitCode>.+)\])?$`)
+	aJob, _ := regexp.Compile(`^Slurm Array Task Job_id=(?P<JobArrayId>\d+)_(?P<JobArrayIndex>\d+) \((?P<JobId>\d+)\) Name=(?P<JobName>.*) (?P<MailType>\w+), \w+ time .+?(?:, (?P<JobState>\w+), ExitCode (?P<ExitCode>\d))?$`)
+
+	env := new(SlurmEnvironment)
+	var jobId string
+	var jobState string
+	var mailType string
+	var jobName string
+	if strings.Contains(subject, "Slurm Array Summary Job_id=") {
+		matches := asJob.FindStringSubmatch(subject)
+		if matches == nil {
+			return nil, errors.New(("Invalid subject line: " + subject))
+		}
+		jobId = matches[1]
+		jobName = matches[2]
+		mailType = matches[3]
+		jobState = matches[4]
+		if jobState == "" {
+			jobState = "PENDING"
+		}
+	} else if strings.Contains(subject, "Slurm Array Task Job_id") {
+		matches := aJob.FindStringSubmatch(subject)
+		if matches == nil {
+			return nil, errors.New(("Invalid subject line: " + subject))
+		}
+		env.SLURM_ARRAY_JOB_ID = matches[1]
+		env.SLURM_ARRAY_TASK_ID = matches[2]
+		jobId = matches[3]
+		jobName = matches[4]
+		mailType = matches[5]
+		jobState = matches[6]
+		if jobState == "" {
+			jobState = "RUNNING"
+		}
+	} else {
+		matches := rJob.FindStringSubmatch(subject)
+		if matches == nil {
+			return nil, errors.New(("Invalid subject line: " + subject))
+		}
+		jobId = matches[1]
+		jobName = matches[2]
+		mailType = matches[3]
+		jobState = matches[4]
+		if jobState == "" {
+			jobState = "RUNNING"
+		}
+
+	}
+	env.SLURM_JOBID = jobId
+	env.SLURM_JOB_ID = jobId
+	env.SLURM_JOB_MAIL_TYPE = mailType
+	env.SLURM_JOB_STATE = jobState
+	env.SLURM_JOB_NAME = jobName
+	return env, nil
+}
+
+func (j *JobContext) UpdateEnvVarsFromMailSubject(subject string) error {
+	env, err := parseSubjectLine(subject)
+	if err != nil {
+		return err
+	}
+	j.SlurmEnvironment = *env
+	return nil
+}
+
 // Get additional job statistics from external source (e.g. jobinfo or sacct)
-func (j *JobContext) GetJobStats(log *log.Logger, subject string, paths map[string]string) {
-	log.Print("Start retrieving job stats")
-	log.Printf("%#v", j.SlurmEnvironment)
+func (j *JobContext) GetJobStats(subject string, paths map[string]string, l *log.Logger) error {
+	l.Print("Start retrieving job stats")
+	l.Printf("%#v", j.SlurmEnvironment)
+
+	// SLURM < 21.08.x don't have any SLURM envs set, we need to parse the mail subject line, retrieve the jobid and all other information from sacct
+	if j.SlurmEnvironment.SLURM_JOBID == "" {
+		err := j.UpdateEnvVarsFromMailSubject(subject)
+		if err != nil {
+			return err
+		}
+	}
 	jobId := j.SlurmEnvironment.SLURM_JOBID
 	if strings.Contains(subject, "Slurm Array Summary Job_id=") {
-		j.MailSubject = fmt.Sprintf("Job Array Summary %s (%s-%s)", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID, j.SlurmEnvironment.SLURM_ARRAY_TASK_MIN, j.SlurmEnvironment.SLURM_ARRAY_TASK_MAX)
-		//jobId = fmt.Sprintf("%s_%s", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID, j.SlurmEnvironment.SLURM_ARRAY_TASK_ID)
+		j.MailSubject = fmt.Sprintf("Job Array Summary %s_*", j.SlurmEnvironment.SLURM_ARRAY_JOB_ID)
 	} else if strings.Contains(subject, "Slurm Array Task Job_id") {
-		jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 		j.MailSubject = fmt.Sprintf("Job Array Task %s", jobId)
 
 	} else {
 		j.MailSubject = fmt.Sprintf("Job %s", jobId)
-
 	}
 	if j.SlurmEnvironment.SLURM_ARRAY_JOB_ID != "" {
 		jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 	}
-	log.Printf("Fetch job info %s", jobId)
-	j.JobStats = *GetSacctMetrics(jobId, log, paths)
+	l.Printf("Fetch job info %s", jobId)
+	jobStats, err := GetSacctMetrics(jobId, paths, l)
+	if err != nil {
+		return err
+	}
+	j.JobStats = *jobStats
 	counter := 0
 	for !IsJobFinished(j.JobStats.State) && j.JobStats.State != j.SlurmEnvironment.SLURM_JOB_STATE && counter < 5 {
 		time.Sleep(2 * time.Second)
-		j.JobStats = *GetSacctMetrics(jobId, log, paths)
+		jobStats, err = GetSacctMetrics(jobId, paths, l)
+		if err != nil {
+			return fmt.Errorf("failed to get job stats: %w", err)
+		}
+		j.JobStats = *jobStats
 		counter += 1
 	}
 	if j.JobStats.State == "RUNNING" {
-		log.Print("Update job with live stats")
-		updateJobStatsWithLiveData(&j.JobStats, jobId, log, paths)
+		l.Print("Update job with live stats")
+		updateJobStatsWithLiveData(&j.JobStats, jobId, paths, l)
 	}
-	log.Printf("Finished retrieving job stats")
+	l.Printf("Finished retrieving job stats")
+	return nil
 }

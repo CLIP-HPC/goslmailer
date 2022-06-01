@@ -28,7 +28,7 @@ config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
 # can be replaced with go test ./... construct
 testdirs=$(sort $(dir $(shell find ./ -name *_test.go)))
 
-all: list test build test_endly install
+all: list test build get_endly test_endly install
 
 list:
 	@echo "================================================================================"
@@ -67,9 +67,13 @@ test:
 	@echo "********************************************************************************"
 	go test -v -count=1 ./...
 
-get_endly:
+endly_linux_$(endly_version).tar.gz:
 	curl -L -O https://github.com/viant/endly/releases/download/v$(endly_version)/endly_linux_$(endly_version).tar.gz
+
+test_e2e/endly:
 	tar -C test_e2e/ -xzf endly_linux_$(endly_version).tar.gz
+
+get_endly: endly_linux_$(endly_version).tar.gz test_e2e/endly
 
 test_endly:
 	cd test_e2e

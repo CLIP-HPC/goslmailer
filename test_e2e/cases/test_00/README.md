@@ -1,6 +1,6 @@
-test_00
--------
+## test_00
+---
 
 Run all binaries without the config file.
 
-
+---
