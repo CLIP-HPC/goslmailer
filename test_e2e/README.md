@@ -3,6 +3,9 @@
 1. [test_00](./cases/test_00/README.md)
 2. [test_01](./cases/test_01/README.md)
 3. [test_02](./cases/test_02/README.md)
+4. [test_03](./cases/test_03/README.md)
+5. [test_04](./cases/test_04/README.md)
+6. [test_05](./cases/test_05/README.md)
 
 ---
 
@@ -37,5 +40,11 @@ Job start
 
 goslmailer render msteams json to file (actual data)
 Job end - fail
+
+
+## test_05
+---
+
+Test goslmailer on SLURM versions (<21.8.x) that don't set the job information in as env variables
 
 ---

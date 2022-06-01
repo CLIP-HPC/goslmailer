@@ -1,10 +1,7 @@
 # goslmailer
 
-> **Warning**
-> Currently goslmailer will only work on SLURM >= 21.08.x
-> 
-> Work in progress to support older versions of SLURM is tracked here:
-https://github.com/CLIP-HPC/goslmailer/issues/4
+> **Info**
+> In SLURM < 21.08.x, only a subset of job related information are available as SLURM environment variables in the `adaptive_card_template.json` and `telegramTemplate.html` templates. Instead of the SLURM environment variables (i.e `Job.SlurmEnvironment.SLURM_JOB_USER`) the variables from `SacctMetrics` can be used (i.e. `.Job.JobStats.User`) instead. See the [adaptive_card_template.json](test_e2e/cases/test_05/conf/adaptive_card_template.json) in the `test_e2e/cases/test_05` test case as an example.
 
 ## Drop-in notification delivery solution for slurm that can do...
 
@@ -21,7 +18,7 @@ https://github.com/CLIP-HPC/goslmailer/issues/4
 **Goslmailer** (GoSlurmMailer) is a drop-in replacement [MailProg](https://slurm.schedmd.com/slurm.conf.html#OPT_MailProg) for [slurm](https://slurm.schedmd.com/).
 
 
-With goslmailer configured as as the slurm mailer, 
+With goslmailer configured as as the slurm mailer,
 
 ```
 MailProg                = /usr/bin/goslmailer
@@ -49,7 +46,7 @@ To support future additional receiver schemes, a [connector package](connectors/
 * place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf`
 * point slurm `MailProg` to the binary
 
-### gobler 
+### gobler
 
 * place binary to the path of your liking
 * place [gobler.conf](cmd/gobler/gobler.conf) to the path of your liking
@@ -74,7 +71,7 @@ See each connector details below...
 
 ## Spooling and throttling of messages - gobler service
 
-In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive. 
+In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive.
 For these environments goslmailer can be configured to spool messages from certain connectors on disk, to be later processed by the **gobler** service.
 
 
@@ -86,7 +83,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 `connector monitor` in turn spins up 3 goroutines: `monitor`, `picker` and `numSenders` x `sender`.
 
-* **monitor** : 
+* **monitor** :
   * every `monitorT` seconds (or milliseconds) scans the `spoolDir` for new messages and sends them to the **picker**
 
 * **picker**  :
@@ -105,7 +102,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 ## Connectors
 
-### default connector 
+### default connector
 
 Specifies which receiver scheme is the default one, in case when user didn't specify `--mail-user` and slurm sent a bare username.
 
@@ -125,6 +122,13 @@ With connector parameters, you can:
 * template message body
 * allowList the recipients
 
+To make sure that mutt properly renders the HTML email, add following lines to `/etc/Muttrc.local`
+
+```
+# Local configuration for Mutt.
+set content_type="text/html"
+```
+
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 
 ---
@@ -135,9 +139,9 @@ Sends **1on1** or **group chat** messages about jobs via [telegram messenger app
 
 ![Telegram card](./images/telegram.png)
 
-Prerequisites for the telegram connector: 
+Prerequisites for the telegram connector:
 
-1. a telegram bot must be created and 
+1. a telegram bot must be created and
 2. the bot daemon service **tgslumbot** must be running.
 
 Site admins can [create a telegram bot](https://core.telegram.org/bots#6-botfather) by messaging [botfather](https://t.me/botfather).

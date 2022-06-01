@@ -38,3 +38,37 @@ type JobContext struct {
 	MailSubject        string
 	PrunedMessageCount uint32
 }
+
+type SacctMetrics struct {
+	JobName      string
+	User         string
+	Account      string
+	Partition    string
+	State        string
+	Ncpus        int64
+	Nodes        int
+	NodeList     string
+	Submittime   string
+	Starttime    string
+	Endtime      string
+	CPUTimeStr   string
+	CPUTime      float64
+	TotalCPU     float64
+	TotalCPUStr  string
+	UserCPU      float64
+	SystemCPU    float64
+	ReqMem       uint64
+	MaxRSS       uint64
+	Walltime     uint64
+	WalltimeStr  string
+	Runtime      uint64
+	RuntimeStr   string
+	MaxDiskWrite uint64
+	MaxDiskRead  uint64
+}
+
+type SstatMetrics struct {
+	MaxRSS       uint64
+	MaxDiskWrite uint64
+	MaxDiskRead  uint64
+}

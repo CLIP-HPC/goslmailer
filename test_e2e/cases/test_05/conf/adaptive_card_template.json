@@ -138,7 +138,7 @@
               {
                 "type":"Fact",
                 "title":"Used Walltime",
-                "value":"{{ .Job.SlurmEnvironment.SLURM_JOB_RUN_TIME }}"
+                "value":"{{ .Job.JobStats.RuntimeStr }}"
               },
               {{ if ne .Job.SlurmEnvironment.SLURM_JOB_STATE "RUNNING" }}
               {

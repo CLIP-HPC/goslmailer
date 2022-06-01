@@ -142,13 +142,13 @@ func parseSubjectLine(subject string) (*SlurmEnvironment, error) {
 			return nil, errors.New(("Invalid subject line: " + subject))
 		}
 		jobId = matches[1]
-		jobName = matches [2]
+		jobName = matches[2]
 		mailType = matches[3]
 		jobState = matches[4]
 		if jobState == "" {
 			jobState = "PENDING"
 		}
- 	} else if strings.Contains(subject, "Slurm Array Task Job_id") {
+	} else if strings.Contains(subject, "Slurm Array Task Job_id") {
 		matches := aJob.FindStringSubmatch(subject)
 		if matches == nil {
 			return nil, errors.New(("Invalid subject line: " + subject))
@@ -156,10 +156,10 @@ func parseSubjectLine(subject string) (*SlurmEnvironment, error) {
 		env.SLURM_ARRAY_JOB_ID = matches[1]
 		env.SLURM_ARRAY_TASK_ID = matches[2]
 		jobId = matches[3]
-		jobName = matches [4]
+		jobName = matches[4]
 		mailType = matches[5]
 		jobState = matches[6]
-		if (jobState == "") {
+		if jobState == "" {
 			jobState = "RUNNING"
 		}
 	} else {
@@ -168,7 +168,7 @@ func parseSubjectLine(subject string) (*SlurmEnvironment, error) {
 			return nil, errors.New(("Invalid subject line: " + subject))
 		}
 		jobId = matches[1]
-		jobName = matches [2]
+		jobName = matches[2]
 		mailType = matches[3]
 		jobState = matches[4]
 		if jobState == "" {
@@ -184,7 +184,7 @@ func parseSubjectLine(subject string) (*SlurmEnvironment, error) {
 	return env, nil
 }
 
-func (j *JobContext) UpdateEnvVarsFromSacct(subject string) error {
+func (j *JobContext) UpdateEnvVarsFromMailSubject(subject string) error {
 	env, err := parseSubjectLine(subject)
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func (j *JobContext) GetJobStats(subject string, paths map[string]string, log *l
 
 	// SLURM < 21.08.x don't have any SLURM envs set, we need to parse the mail subject line, retrieve the jobid and all other information from sacct
 	if j.SlurmEnvironment.SLURM_JOBID == "" {
-		err := j.UpdateEnvVarsFromSacct(subject)
+		err := j.UpdateEnvVarsFromMailSubject(subject)
 		if err != nil {
 			return err
 		}
