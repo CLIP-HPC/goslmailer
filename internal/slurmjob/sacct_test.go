@@ -1,7 +1,9 @@
 package slurmjob
 
 import (
+	"bytes"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 )
@@ -13,7 +15,8 @@ func TestParseSacctMetrics(t *testing.T) {
 		t.Fatalf("Can not open test data: %v", err)
 	}
 	data, _ := ioutil.ReadAll(file)
-	metrics, _ := ParseSacctMetrics(data)
+	l := log.New(&bytes.Buffer{}, "Testing: ", log.Llongfile)
+	metrics, _ := ParseSacctMetrics(data, l)
 	t.Logf("%+v", metrics)
 
 	if metrics.JobName != "JobName" {
@@ -119,7 +122,8 @@ func TestParseSstatMetrics(t *testing.T) {
 
 func TestParseSacctMetricsEmptyInput(t *testing.T) {
 	// Read the input data from a file
-	metrics, _ := ParseSacctMetrics([]byte(""))
+	l := log.New(&bytes.Buffer{}, "Testing: ", log.Llongfile)
+	metrics, _ := ParseSacctMetrics([]byte(""), l)
 	var emptyMetrics SacctMetrics
 	t.Logf("%+v", metrics)
 

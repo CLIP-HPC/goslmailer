@@ -39,6 +39,6 @@ pipeline:
   test_assert_goslmailer:
     action: validator:assert
     expect:
-      - '/Unable to retrieve job stats. Error: Failed to execute sacct command: exit status 1/'
+      - '/Unable to retrieve job stats. Error: failed to execute sacct command: exit status 1/'
     actual:
       - $run_goslmailer.Output

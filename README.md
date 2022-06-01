@@ -1,7 +1,9 @@
 # goslmailer
 
 > **Info**
-> In SLURM < 21.08.x, only a subset of job related information are available as SLURM environment variables in the `adaptive_card_template.json` and `telegramTemplate.html` templates. Instead of the SLURM environment variables (i.e `Job.SlurmEnvironment.SLURM_JOB_USER`) the variables from `SacctMetrics` can be used (i.e. `.Job.JobStats.User`) instead. See the [adaptive_card_template.json](test_e2e/cases/test_05/conf/adaptive_card_template.json) in the `test_e2e/cases/test_05` test case as an example.
+> Now also works with SLURM < 21.08
+>
+> For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
 
 ## Drop-in notification delivery solution for slurm that can do...
 
@@ -40,10 +42,41 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ## Installation
 
+### Build
+
+#### Quick version, without end to end testing
+
+```
+git clone https://github.com/CLIP-HPC/goslmailer.git
+make test
+make build
+make install
+```
+
+#### Slightly more involved, with end to end testing:
+
+Prerequisites:
+
+1. generated RSA keypair (passwordless) (`ssh-keygen -t rsa`)
+2. `ssh $USER@localhost` must work without password
+
+Known caveats:
+
+* redhat/centos: must have lsb_release binary installed, package: `redhat-lsb-core`
+* ubuntu 22: `set enable-bracketed-paste off` present in `~/.inputrc`
+* maybe/maybe not, depends if you see failed tests: `export TERM=dumb` in `~/.bashrc` :)
+
+```
+# downloads endly binary and runs endly tests
+make 
+```
+
+
 ### goslmailer
 
 * place binary to the path of your liking
-* place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf`
+* place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf` (default path)
+  * OR: anywhere else, but then run the binary with `GOSLMAILER_CONF=/path/to/gosl.conf` in environment
 * point slurm `MailProg` to the binary
 
 ### gobler

@@ -1,5 +1,13 @@
 package slurmjob
 
+type JobContext struct {
+	SlurmEnvironment
+	JobStats           SacctMetrics
+	Hints              []string
+	MailSubject        string
+	PrunedMessageCount uint32
+}
+
 type SlurmEnvironment struct {
 	SLURM_ARRAY_JOB_ID      string
 	SLURM_ARRAY_TASK_COUNT  string
@@ -29,14 +37,6 @@ type SlurmEnvironment struct {
 	SLURM_JOB_UID           string
 	SLURM_JOB_USER          string
 	SLURM_JOB_WORK_DIR      string
-}
-
-type JobContext struct {
-	SlurmEnvironment
-	JobStats           SacctMetrics
-	Hints              []string
-	MailSubject        string
-	PrunedMessageCount uint32
 }
 
 type SacctMetrics struct {

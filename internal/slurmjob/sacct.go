@@ -77,7 +77,7 @@ func ParseSstatMetrics(input []byte) (*SstatMetrics, error) {
 	return &metrics, nil
 }
 
-func ParseSacctMetrics(input []byte) (*SacctMetrics, error) {
+func ParseSacctMetrics(input []byte, l *log.Logger) (*SacctMetrics, error) {
 	var metrics SacctMetrics
 	if len(input) == 0 {
 		return &metrics, nil
@@ -159,7 +159,7 @@ func ParseSacctMetrics(input []byte) (*SacctMetrics, error) {
 	metrics.RuntimeStr = split[11]
 	metrics.Runtime = uint64(parseCpuTime(split[11]))
 
-	log.Printf("Metrics: %#v", metrics)
+	l.Printf("Metrics: %#v", metrics)
 	return &metrics, nil
 }
 
@@ -177,24 +177,24 @@ func (m SacctMetrics) CalcSystemComputePercentage() float64 {
 	return 0.0
 }
 
-func GetSacctMetrics(jobId string, paths map[string]string, log *log.Logger) (*SacctMetrics, error) {
-	sacctMetrics, err := GetSacctData(jobId, paths, log)
+func GetSacctMetrics(jobId string, paths map[string]string, l *log.Logger) (*SacctMetrics, error) {
+	sacctMetrics, err := GetSacctData(jobId, paths, l)
 	if err != nil {
 		return nil, err
 	}
-	return ParseSacctMetrics(sacctMetrics)
+	return ParseSacctMetrics(sacctMetrics, l)
 }
 
-func GetSstatMetrics(jobId string, paths map[string]string, log *log.Logger) (*SstatMetrics, error) {
-	sstatMetrics, err := GetSacctData(jobId, paths, log)
+func GetSstatMetrics(jobId string, paths map[string]string, l *log.Logger) (*SstatMetrics, error) {
+	sstatMetrics, err := GetSacctData(jobId, paths, l)
 	if err != nil {
 		return nil, err
 	}
 	return ParseSstatMetrics(sstatMetrics)
 }
 
-func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, log *log.Logger, paths map[string]string) {
-	liveMetrics, err := GetSstatMetrics(jobId, paths, log)
+func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, paths map[string]string, l *log.Logger) {
+	liveMetrics, err := GetSstatMetrics(jobId, paths, l)
 	if err == nil {
 
 		if liveMetrics.MaxRSS > 0 {
@@ -210,22 +210,22 @@ func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, log *log.Lo
 }
 
 // Execute the saccct command and return its output
-func GetSacctData(jobId string, paths map[string]string, log *log.Logger) ([]byte, error) {
+func GetSacctData(jobId string, paths map[string]string, l *log.Logger) ([]byte, error) {
 	formatLine := "JobName,User,Account,Partition,NodeList,ncpus,State,Submit,start,end,timelimit,elapsed,CPUTime,TotalCPU,UserCPU,SystemCPU,ReqMem,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode,Comment"
 	cmd := exec.Command(paths["sacct"], "-j", jobId, "-n", "-p", "--format", formatLine)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to execute sacct command: %w", err)
+		return nil, fmt.Errorf("failed to execute sacct command: %w", err)
 	}
 	return output, nil
 }
 
-func GetSstatData(jobId string, paths map[string]string, log *log.Logger) ([]byte, error) {
+func GetSstatData(jobId string, paths map[string]string, l *log.Logger) ([]byte, error) {
 	formatLine := "JobID,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode"
 	cmd := exec.Command(paths["sstat"], "-a", "-j", jobId, "-n", "-p", "--format", formatLine)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to execute sstat command: %w", err)
+		return nil, fmt.Errorf("failed to execute sstat command: %w", err)
 	}
 	return output, nil
 }

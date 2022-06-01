@@ -194,9 +194,9 @@ func (j *JobContext) UpdateEnvVarsFromMailSubject(subject string) error {
 }
 
 // Get additional job statistics from external source (e.g. jobinfo or sacct)
-func (j *JobContext) GetJobStats(subject string, paths map[string]string, log *log.Logger) error {
-	log.Print("Start retrieving job stats")
-	log.Printf("%#v", j.SlurmEnvironment)
+func (j *JobContext) GetJobStats(subject string, paths map[string]string, l *log.Logger) error {
+	l.Print("Start retrieving job stats")
+	l.Printf("%#v", j.SlurmEnvironment)
 
 	// SLURM < 21.08.x don't have any SLURM envs set, we need to parse the mail subject line, retrieve the jobid and all other information from sacct
 	if j.SlurmEnvironment.SLURM_JOBID == "" {
@@ -217,8 +217,8 @@ func (j *JobContext) GetJobStats(subject string, paths map[string]string, log *l
 	if j.SlurmEnvironment.SLURM_ARRAY_JOB_ID != "" {
 		jobId = j.SlurmEnvironment.SLURM_ARRAY_JOB_ID
 	}
-	log.Printf("Fetch job info %s", jobId)
-	jobStats, err := GetSacctMetrics(jobId, paths, log)
+	l.Printf("Fetch job info %s", jobId)
+	jobStats, err := GetSacctMetrics(jobId, paths, l)
 	if err != nil {
 		return err
 	}
@@ -226,17 +226,17 @@ func (j *JobContext) GetJobStats(subject string, paths map[string]string, log *l
 	counter := 0
 	for !IsJobFinished(j.JobStats.State) && j.JobStats.State != j.SlurmEnvironment.SLURM_JOB_STATE && counter < 5 {
 		time.Sleep(2 * time.Second)
-		jobStats, err = GetSacctMetrics(jobId, paths, log)
+		jobStats, err = GetSacctMetrics(jobId, paths, l)
 		if err != nil {
-			return fmt.Errorf("Failed to Get job stats: %w", err)
+			return fmt.Errorf("failed to get job stats: %w", err)
 		}
 		j.JobStats = *jobStats
 		counter += 1
 	}
 	if j.JobStats.State == "RUNNING" {
-		log.Print("Update job with live stats")
-		updateJobStatsWithLiveData(&j.JobStats, jobId, log, paths)
+		l.Print("Update job with live stats")
+		updateJobStatsWithLiveData(&j.JobStats, jobId, paths, l)
 	}
-	log.Printf("Finished retrieving job stats")
+	l.Printf("Finished retrieving job stats")
 	return nil
 }

@@ -9,8 +9,8 @@ The connectors call `renderer.RenderTemplate` function.
 
 Data structure you can reference in the template can be found in:
 
-* [rendererer.go](../internal/renderer/renderer.go)
 * [job_data.go](../internal/slurmjob/job_data.go)
+* [rendererer.go](../internal/renderer/renderer.go)
 
 Example:
 
