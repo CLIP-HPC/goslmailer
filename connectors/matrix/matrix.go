@@ -9,6 +9,8 @@ import (
 
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/id"
+	"maunium.net/go/mautrix/format"
+	"maunium.net/go/mautrix/event"
 )
 
 func NewConnector(conf map[string]string) (*Connector, error) {
@@ -52,7 +54,9 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	}
 	l.Printf("Login successful\n")
 
-        _, _ = client.SendText(id.RoomID(c.roomid), buffer.String());
+        content := format.RenderMarkdown(buffer.String(), true, true)
+        content.MsgType = event.MsgNotice
+        _, err = client.SendMessageEvent(id.RoomID(c.roomid), event.EventMessage, content)
 
 	return err;
 }
