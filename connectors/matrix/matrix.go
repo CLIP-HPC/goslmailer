@@ -3,6 +3,7 @@ package matrix
 import (
 	"log"
         "bytes"
+        "strings"
 
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
@@ -16,11 +17,9 @@ import (
 func NewConnector(conf map[string]string) (*Connector, error) {
 	c := Connector{
 		username:     conf["username"],
-		password:     conf["password"],
+		token:     conf["token"],
 		homeserver:   conf["homeserver"],
-		roomid:       conf["roomid"],
 		template:     conf["template"],
-		format:       conf["format"],
 	}
 	return &c, nil
 }
@@ -29,34 +28,28 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	var (
 		err     error = nil
 		buffer  bytes.Buffer
-                enduser string = "testuser"
+                roomid string = mp.TargetUser
 	)
 
+        //TODO: someone doesn't seem to like a ":" in the value, so use "@"
+        //instead and replace it here. See if there's a better way.
+        roomid = strings.Replace(roomid, "@",":",-1)
+
         buffer = bytes.Buffer{}
-        err = renderer.RenderTemplate(c.template, c.format, mp.JobContext, enduser, &buffer)
+        err = renderer.RenderTemplate(c.template, "text", mp.JobContext, roomid, &buffer)
         if err != nil {
                 return err
         }
 
 	l.Printf("Logging into", c.homeserver, "as", c.username, "\n")
-	client, err := mautrix.NewClient(c.homeserver, "", "")
+        client, err := mautrix.NewClient(c.homeserver, id.UserID(c.username), c.token)
 	if err != nil {
 		panic(err)
 	}
-	_, err = client.Login(&mautrix.ReqLogin{
-		Type:             "m.login.password",
-		Identifier:       mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: c.username},
-		Password:         c.password,
-		StoreCredentials: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	l.Printf("Login successful\n")
 
         content := format.RenderMarkdown(buffer.String(), true, true)
         content.MsgType = event.MsgNotice
-        _, err = client.SendMessageEvent(id.RoomID(c.roomid), event.EventMessage, content)
+        _, err = client.SendMessageEvent(id.RoomID(roomid), event.EventMessage, content)
 
 	return err;
 }

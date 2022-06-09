@@ -2,9 +2,7 @@ package matrix
 
 type Connector struct {
 	username          string
-	password       string
+	token       string
 	homeserver string
-	roomid  string
 	template  string
-	format  string
 }
