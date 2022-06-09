@@ -4,6 +4,7 @@ import (
         "fmt"
         "log"
         "flag"
+        "strings"
 
         "maunium.net/go/mautrix"
         "maunium.net/go/mautrix/id"
@@ -17,7 +18,7 @@ func main() {
             matrixServer string
         )
 
-        flag.StringVar(&matrixServer, "s", "https://matrix-client.matrix.org", "Matrix server URL")
+        flag.StringVar(&matrixServer, "s", "matrix.org", "Matrix server URL")
         flag.StringVar(&matrixBotUser, "u", "", "Bot username")
         flag.StringVar(&matrixBotToken, "t", "", "Bot user token")
 
@@ -54,7 +55,9 @@ func main() {
                         panic(err)
                 }
                 fmt.Printf("Joined room %s\n", event.RoomID)
-                client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you: --mail-user=matrix:%s\n", event.RoomID))
+                //TODO: replacing the room ID's ":" with "@". See related TODO
+                //in connectors/matrix/matrix.go
+                client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you: --mail-user=matrix:%s\n", strings.Replace(event.RoomID,":","@",1)))
         })
 
         fmt.Println("Looking for rooms to join...")
