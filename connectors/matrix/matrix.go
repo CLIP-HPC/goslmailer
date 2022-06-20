@@ -31,10 +31,6 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
                 roomid string = mp.TargetUser
 	)
 
-        //TODO: someone doesn't seem to like a ":" in the value, so use "@"
-        //instead and replace it here. See if there's a better way.
-        roomid = strings.Replace(roomid, "@",":",-1)
-
         buffer = bytes.Buffer{}
         err = renderer.RenderTemplate(c.template, "text", mp.JobContext, roomid, &buffer)
         if err != nil {

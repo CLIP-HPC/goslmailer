@@ -55,9 +55,7 @@ func main() {
                         panic(err)
                 }
                 fmt.Printf("Joined room %s\n", event.RoomID)
-                //TODO: replacing the room ID's ":" with "@". See related TODO
-                //in connectors/matrix/matrix.go
-                client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you: --mail-user=matrix:%s\n", strings.Replace(string(event.RoomID),":","@",1)))
+                client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you: --mail-user=matrix:%s\n", string(event.RoomID)))
         })
 
         fmt.Println("Looking for rooms to join...")
