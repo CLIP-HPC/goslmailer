@@ -35,7 +35,7 @@ var (
 				CmdParams{
 					Subject: "Slurm subject line",
 					Other: []string{
-						",conX,conX:pj,msteams:pja,:::xxx,,msteams::,petarj,:xxx",
+                                            ",conX,conX:pj,msteams:pja,:::xxx,,msteams::,petarj,matrix:!channelid:server.org,:xxx",
 					},
 				},
 				Receivers{},
@@ -57,6 +57,10 @@ var (
 					scheme: "conX",
 					target: "petarj",
 				},
+				{
+					scheme: "matrix",
+                                        target: "!channelid:server.org",
+				},
 			},
 		},
 		{
@@ -72,6 +76,7 @@ var (
 						"pja@bla.bla",
 						"msteams:pja",
 						":::pja",
+                                                "matrix:!channelid:server.org",
 						"::pja",
 					},
 				},
@@ -89,6 +94,10 @@ var (
 				{
 					scheme: "msteams",
 					target: "pja",
+				},
+				{
+					scheme: "matrix",
+                                        target: "!channelid:server.org",
 				},
 			},
 		},
