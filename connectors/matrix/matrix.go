@@ -41,7 +41,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
                 return err
         }
 
-	l.Printf("Logging into", c.homeserver, "as", c.username, "\n")
+	l.Println("Logging into", c.homeserver, "as", c.username)
         client, err := mautrix.NewClient(c.homeserver, id.UserID(c.username), c.token)
 	if err != nil {
                 return err
