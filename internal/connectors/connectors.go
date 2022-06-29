@@ -3,8 +3,8 @@ package connectors
 import (
 	"log"
 
-	"github.com/CLIP-HPC/goslmailer/connectors/matrix"
 	"github.com/CLIP-HPC/goslmailer/connectors/mailto"
+	"github.com/CLIP-HPC/goslmailer/connectors/matrix"
 	"github.com/CLIP-HPC/goslmailer/connectors/msteams"
 	"github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/config"

@@ -67,11 +67,11 @@ func (ic *invocationContext) generateReceivers(defCon string, l *log.Logger) {
 				} else {
 					l.Printf("generateReceivers: target %d = %#v is an empty receiver, ignoring!\n", i, targetsSplit)
 				}
-                        case 2:
-                                //Handle "connector:::" (2..n of ":" ) as if the target was empty
-                                if strings.Count(targetsSplit[1],":") == len(targetsSplit[1]){
-                                        targetsSplit[1] = ""
-                                }
+			case 2:
+				//Handle "connector:::" (2..n of ":" ) as if the target was empty
+				if strings.Count(targetsSplit[1], ":") == len(targetsSplit[1]) {
+					targetsSplit[1] = ""
+				}
 				if targetsSplit[1] != "" && targetsSplit[0] != "" {
 					ic.Receivers = append(ic.Receivers, struct {
 						scheme string
