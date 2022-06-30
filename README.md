@@ -74,23 +74,31 @@ make
 
 ### goslmailer
 
-* place binary to the path of your liking
+* place binary in a path to your liking
 * place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf` (default path)
   * OR: anywhere else, but then run the binary with `GOSLMAILER_CONF=/path/to/gosl.conf` in environment
 * point slurm `MailProg` to the binary
 
 ### gobler
 
-* place binary to the path of your liking
-* place [gobler.conf](cmd/gobler/gobler.conf) to the path of your liking
+* place binary in a path to your liking
+* place [gobler.conf](cmd/gobler/gobler.conf) in a path to your liking
 * start the service (with -c switch pointing to config file)
 
 ### tgslurmbot
 
-* place binary to the path of your liking
-* place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) to the path of your liking
+* place binary in a path to your liking
+* place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
   * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
 * start the service (with -c switch pointing to config file)
+
+### matrixslurmbot
+
+* place binary in a path to your liking
+* place [matrixslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
+  * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
+* start the service (with -c switch pointing to config file)
+
 
 ---
 
@@ -99,6 +107,7 @@ make
 * **msteams** webhook --mail-user=`msteams:`userid
 * **telegram** bot --mail-user=`telegram:`chatId
 * **mailto** --mail-user=`mailto:`email-addr
+* **matrix** bot --mail-user=`matrix:`roomId
 
 See each connector details below...
 
@@ -200,6 +209,30 @@ Since MS Teams does not provide with the option to send messages to users direct
 
 Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/CLIP-HPC/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
 A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
+
+See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
+
+---
+
+![Matrix](./images/matrix.png)
+
+Sends messages to user-defined Matrix rooms
+
+There are two use cases:
+
+1. Sending 
+
+Prerequisites for the Matrix connector:
+
+1. a Matrix account
+2. (optional) the bot daemon service **matrixslurmbot** running, connected to
+   that Matrix account.
+
+Once the bot is created, you will receive a bot `token`. Place the bot `token` in the goslmailer/gobler config file in the `telegram` connector section (see example below).
+
+Start the tgslurmbot binary that serves as the bot.
+
+When the chat/group chat with the bot is initiated and/or the bot receives a `/start` command, he will reply with a chat-specific `--mail-user=telegram:nnn` message which the user can use in his slurm job scripts to get the job messages.
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
 

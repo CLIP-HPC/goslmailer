@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-        "strings"
 
 	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
