@@ -212,7 +212,7 @@ func main() {
 		l.Printf("Joined room %s\n", event.RoomID)
 
 		// send slurm line upon joining
-		client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you:\n--mail-user=matrix:%s\n", string(event.RoomID)))
+		client.SendText(event.RoomID, fmt.Sprintf("Hello, use this switch in your job submission script and i'll get back to you:\n--mail-user='matrix:%s'\n", string(event.RoomID)))
 		l.Printf("--------------------------------------------------------------------------------\n")
 	})
 

@@ -34,11 +34,10 @@
       "format": "MarkdownV2"
     },
     "matrix": {
-      "name": "Matrix connector",
-      "username": "mybot",
-      "token": "syt_dHJvcGljXzXCjpacxjxcacpcxjpcjxpV_309iKz",
+      "username": "@myuser:matrix.org",
+      "token": "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93",
       "homeserver": "matrix.org",
-      "template": "/opt/goslmailer/template.md"
+      "template": "/path/to/matrix_template.md"
     },
     "textfile": {                                   # fictitious "textfile" connector, package code for it doesn't exist, implementation left as the exercise for the reader
       "path": "/tmp"                                # see above.

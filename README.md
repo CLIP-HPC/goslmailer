@@ -214,27 +214,59 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
+### matrix
+
+Sends messages to user-defined Matrix rooms.
+
 ![Matrix](./images/matrix.png)
 
-Sends messages to user-defined Matrix rooms
+The first thing you need is to add the proper parameters to the
+connectors/matrix section of the config file.
 
-There are two use cases:
+To obtain the access token, you can run this command using curl:
 
-1. Sending 
+```bash
+curl -XPOST -d '{"type":"m.login.password", "user":"@myuser:matrix.org", "password":"mypassword"}' "https://matrix.org/_matrix/client/r0/login"
+```
 
-Prerequisites for the Matrix connector:
+Which should get you a response akin to this one, containing the token:
 
-1. a Matrix account
-2. (optional) the bot daemon service **matrixslurmbot** running, connected to
-   that Matrix account.
+```json
+{
+    "user_id": "@myuser:matrix.org",
+    "access_token": "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93",
+    "home_server": "matrix.org",
+    "device_id": "DMIIOMEYBK",
+    "well_known": {
+        "m.homeserver": {
+            "base_url": "https://matrix-client.matrix.org/"
+        }
+    }
+}
+```
 
-Once the bot is created, you will receive a bot `token`. Place the bot `token` in the goslmailer/gobler config file in the `telegram` connector section (see example below).
+Once you've done this, goslmailer will be able to send messages to any channel
+the configured user is a member of with a command like this:
 
-Start the tgslurmbot binary that serves as the bot.
+```bash
+sbatch --mail-type=ALL --mail-user='matrix:!VEbreVXXXkmLWjeGPi:matrix.org' --wrap "ls"
+```
 
-When the chat/group chat with the bot is initiated and/or the bot receives a `/start` command, he will reply with a chat-specific `--mail-user=telegram:nnn` message which the user can use in his slurm job scripts to get the job messages.
+Where `!VEbreVXXXkmLWjeGPi:matrix.org` is the ID of the channel you want to send
+the message to. You can obtain this ID from the `Settings>Advanced` section of
+the room.
 
-See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
+#### Using the bot
+
+In addition to sending messages to a "normal" user, you can also create a
+dedicated user to behave as a bot. For this you just need to start the
+`matrixslurmbot`, pointing it to a config file identical to the one before using
+(you could strip it down to contain only the 'matrix' section).
+
+While the bot is running, any user can invite it to join a channel (e.g. `/invite
+@mybotuser:matrix.org`). The bot will join the channel and post the
+`--mail-user:...` argument to be used when submitting jobs in order to receive a message in that
+channel.
 
 ---
 
