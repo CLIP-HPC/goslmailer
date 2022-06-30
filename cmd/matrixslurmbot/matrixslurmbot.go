@@ -14,32 +14,61 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
-func leaveIfRoomEmpty(c *mautrix.Client, l *log.Logger) error {
-	//START TEST FOR LEAVING EMPTY ROOMS
-	jrResp, err := c.JoinedRooms()
+func leaveAndForgetRoom(c *mautrix.Client, rid id.RoomID, l *log.Logger) error {
+	l.Printf("Room - leaving: %s\n", rid)
+	_, err := c.LeaveRoom(rid)
 	if err != nil {
-		l.Printf("Error looking up joined rooms: %v", err)
+		l.Printf("Error leaving room: %s", err)
 		return err
 	}
-	for _, roomID := range jrResp.JoinedRooms {
-		l.Println("Found bot joined to room: ", roomID)
-		jmResp, err := c.JoinedMembers(roomID)
+	l.Printf("Room - forgetting: %s\n", rid)
+	_, err = c.ForgetRoom(rid)
+	if err != nil {
+		l.Printf("Error forgetting room: %s", err)
+		return err
+	}
+	return nil
+}
+
+func testRoomEmpty(c *mautrix.Client, rid id.RoomID, l *log.Logger) (bool, error) {
+	l.Printf("Test room if room empty: %s\n", rid)
+	jmResp, err := c.JoinedMembers(rid)
+	if err != nil {
+		l.Printf("Error looking up joined members: %v", err)
+		return false, err
+	}
+	if len(jmResp.Joined) == 1 {
+		//The bot is alone here
+		return true, nil
+	}
+	return false, nil
+}
+
+func leaveIfRoomEmpty(c *mautrix.Client, rid id.RoomID, l *log.Logger) error {
+	var rooms []id.RoomID
+	//START TEST FOR LEAVING EMPTY ROOMS
+	if rid != "" {
+		// test one specific room, as OnEvent() response
+		rooms = append(rooms, rid)
+	} else {
+		// find ALL rooms bot is joined, on startup
+		jrResp, err := c.JoinedRooms()
 		if err != nil {
-			l.Printf("Error looking up joined members: %v", err)
+			l.Printf("Error looking up joined rooms: %v", err)
 			return err
 		}
-		if len(jmResp.Joined) == 1 {
-			//The bot is the only one there, leave and forget
-			l.Printf("Room: %s empty, leaving.\n", roomID)
-			_, err := c.LeaveRoom(roomID)
+		rooms = append(rooms, jrResp.JoinedRooms...)
+	}
+
+	// traverse target rooms, test if empty, then leave & forget
+	for _, r := range rooms {
+		alone, err := testRoomEmpty(c, r, l)
+		if err != nil {
+			return err
+		}
+		if alone {
+			err = leaveAndForgetRoom(c, r, l)
 			if err != nil {
-				l.Printf("Error leaving room: %v", err)
-				return err
-			}
-			l.Printf("Room: %s forgetting.\n", roomID)
-			_, err = c.ForgetRoom(roomID)
-			if err != nil {
-				l.Printf("Error forgetting room: %v", err)
 				return err
 			}
 		}
@@ -105,7 +134,8 @@ func main() {
 	//l.Printf("SUCCESS: %#v\n", client)
 
 	// let's cleanup leaving/forgetting empty rooms
-	err = leaveIfRoomEmpty(client, l)
+	l.Printf("Test and leave empty joined rooms...\n")
+	err = leaveIfRoomEmpty(client, "", l)
 	if err != nil {
 		l.Printf("ERROR: leaveIfRoomEmpty: %s\n", err)
 	}
@@ -138,10 +168,15 @@ func main() {
 		if *event.StateKey != matrixBotUser {
 			// someone else joined or left the room
 			l.Printf("Event not triggered by us, test and leave empty rooms.\n")
-			// call leaveIfRoomEmpty()
-			err = leaveIfRoomEmpty(client, l)
-			if err != nil {
-				l.Printf("ERROR: leaveIfRoomEmpty: %s\n", err)
+			// if someone else "leave"s, we test and leave if room is left empty, otherwise we ignore this event
+			if content.Membership == "leave" {
+				l.Printf("Someone left the room, test if we're alone\n")
+				err = leaveIfRoomEmpty(client, event.RoomID, l)
+				if err != nil {
+					l.Printf("ERROR: leaveIfRoomEmpty: %s\n", err)
+				}
+			} else {
+				l.Printf("Someone joined the room, ignore the event.\n")
 			}
 			return
 		}
@@ -165,9 +200,11 @@ func main() {
 		l.Printf("--------------------------------------------------------------------------------\n")
 	})
 
+	l.Printf("Ready and waiting for events...\n")
 	err = client.Sync()
 	if err != nil {
 		l.Printf("ERROR: Sync(): %s\n", err)
 	}
+	l.Printf("Done.\n")
 	// eowork
 }
