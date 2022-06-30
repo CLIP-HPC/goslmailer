@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+        "strings"
 
 	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
@@ -151,6 +152,14 @@ func main() {
 
 	// do we need to keep any state at all?
 	syncer.OnEvent(client.Store.(*mautrix.InMemoryStore).UpdateState)
+	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, event *event.Event) {
+            //TODO: implement this for encrypted channels, only works for
+            //unencrypted right now
+	    body := event.Content.Raw["body"].(string)
+            if strings.HasPrefix(body, "!bot"){
+                client.SendText(event.RoomID, fmt.Sprintf("Sorry, I'm still a bit dumb. Use this switch in your job submission script and i'll get back to you:\n--mail-user=matrix:%s\n", string(event.RoomID)))
+            }
+	})
 	syncer.OnEventType(event.StateMember, func(source mautrix.EventSource, event *event.Event) {
 		l.Printf("--------------------------------------------------------------------------------\n")
 		// skip non-member events and member events that don't pertain
