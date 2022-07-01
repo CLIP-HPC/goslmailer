@@ -22,7 +22,7 @@ installdir=build/goslmailer-$(version)
 # list of files to include in build
 bins=$(notdir $(bindirs))
 readme=README.md
-templates=templates/adaptive_card_template.json templates/telegramTemplate.html
+templates=templates/adaptive_card_template.json templates/telegramTemplate.html templates/matrix_template.md
 config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
 
 # can be replaced with go test ./... construct
