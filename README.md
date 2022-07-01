@@ -214,6 +214,10 @@ Sends messages to user-defined Matrix rooms.
 
 ![Matrix](./images/matrix.png)
 
+The Matrix connector can send messages through a pre-defined user that you
+manually join into channels. In addition, you can setup matrixslurmbot to
+control this pre-defined user and have him join rooms upon invitation.
+
 The first thing you need is to add the proper parameters to the
 connectors/matrix section of the config file.
 
@@ -252,14 +256,18 @@ the room.
 
 #### Using the bot
 
-In addition to sending messages to a "normal" user, you can also create a
-dedicated user to behave as a bot. For this you just need to start the
-`matrixslurmbot`, pointing it to a config file identical to the one before using
+Instead of manually having the pre-defined user join certain rooms, you can use
+`matrixslurmbot` to control this user and have it join rooms automatically upon invitation.
+For this you just need to start the `matrixslurmbot`, pointing it to a config file identical to the one before using
 (you could strip it down to contain only the 'matrix' section).
 
 While the bot is running, any user can invite it to join a channel (e.g. `/invite
 @mybotuser:matrix.org`). The bot will join the channel and post the
 `--mail-user:...` argument to be used when submitting jobs in order to receive a message in that
+channel.
+
+In the event that the pre-defined user is alone in a channel (i.e. all normal
+users left), the bot will make the pre-defined user leave and forget the
 channel.
 
 ---
