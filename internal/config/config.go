@@ -34,21 +34,21 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 		return err
 	}
 
-        if cc.Binpaths == nil {
-	    cc.Binpaths = make(map[string]string)
+	if cc.Binpaths == nil {
+		cc.Binpaths = make(map[string]string)
 	}
 
 	// set default paths
-        defaultpaths := map[string]string{
-            "sacct": "/usr/bin/sacct",
-            "sstat": "/usr/bin/sstat",
-        }
+	defaultpaths := map[string]string{
+		"sacct": "/usr/bin/sacct",
+		"sstat": "/usr/bin/sstat",
+	}
 
-        for key, path := range defaultpaths {
-            if _, exists := cc.Binpaths[key]; !exists {
-                cc.Binpaths[key] = path
-            }
-        }
+	for key, path := range defaultpaths {
+		if _, exists := cc.Binpaths[key]; !exists {
+			cc.Binpaths[key] = path
+		}
+	}
 
 	return nil
 }

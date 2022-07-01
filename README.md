@@ -5,13 +5,18 @@
 >
 > For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
 
-## Drop-in notification delivery solution for slurm that can do...
+## Drop-in notification delivery solution for slurm that can do:
 
-* message delivery to: **msteams**, **telegram**, **e-mail**
+* message delivery to: 
+  * [**matrix**](https://matrix.org/)
+  * [**telegram**](https://telegram.org/)
+  * [**msteams**](https://teams.com)
+  * **e-mail**
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
 * **templateable** messages ([readme](./templates/README.md))
-* message **throttling**
+* message **spooling** and **throttling**, [details here...](#spooling-and-throttling-of-messages---gobler-service)
+* easy to develop extensions for other protocols, [more here...](./connectors/connectorX/README.md) 
 
 ---
 
@@ -36,11 +41,20 @@ sbatch --mail-type=ALL --mail-user="mailto:useremailA,msteams:usernameB,telegram
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
 
+## Currently available connectors:
+
+* [**matrix**](#matrix-connector) bot --mail-user=`matrix:`roomId
+* [**telegram**](#telegram-connector) bot --mail-user=`telegram:`chatId
+* [**mailto**](#mailto-connector) --mail-user=`mailto:`email-addr
+* [**msteams**](#msteams-connector) webhook --mail-user=`msteams:`userid
+
+See each connector details below...
+
 ### If you would like to contribute to this project by developing a new connector, [here](./connectors/connectorX/README.md) is a heavily annotated connector boilerplate (fully functional) to help you get started.
 
 ---
 
-## Installation
+## Building and installing
 
 ### Build
 
@@ -71,42 +85,43 @@ Known caveats:
 make 
 ```
 
+### Install
 
-### goslmailer
+#### goslmailer
 
-* place binary to the path of your liking
+* place binary in a path to your liking
 * place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf` (default path)
   * OR: anywhere else, but then run the binary with `GOSLMAILER_CONF=/path/to/gosl.conf` in environment
 * point slurm `MailProg` to the binary
 
-### gobler
+#### gobler
 
-* place binary to the path of your liking
-* place [gobler.conf](cmd/gobler/gobler.conf) to the path of your liking
+* place binary in a path to your liking
+* place [gobler.conf](cmd/gobler/gobler.conf) in a path to your liking
 * start the service (with -c switch pointing to config file)
 
-### tgslurmbot
+#### tgslurmbot
 
-* place binary to the path of your liking
-* place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) to the path of your liking
-  * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
+* place binary in a path to your liking
+* place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
+  * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example) , so you can use the same one (other connectors configs are not needed)
 * start the service (with -c switch pointing to config file)
+
+#### matrixslurmbot
+
+* place binary in a path to your liking
+* place [matrixslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
+  * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example), so you can use the same one (other connectors configs are not needed)
+* start the service (with -c switch pointing to config file)
+
 
 ---
 
-## Currently available connectors:
-
-* **msteams** webhook --mail-user=`msteams:`userid
-* **telegram** bot --mail-user=`telegram:`chatId
-* **mailto** --mail-user=`mailto:`email-addr
-
-See each connector details below...
 
 ## Spooling and throttling of messages - gobler service
 
 In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive.
 For these environments goslmailer can be configured to spool messages from certain connectors on disk, to be later processed by the **gobler** service.
-
 
 **gobler** is a daemon program that can be [configured](cmd/gobler/gobler.conf) to monitor specific spool directories for messages, process them and send out using the same connectors as goslmailer.
 
@@ -145,7 +160,7 @@ Specifies which receiver scheme is the default one, in case when user didn't spe
 
 ---
 
-### mailto
+### mailto connector
 
 Mailto covers for original slurm e-mail sending functionality, plus a little bit more.
 With connector parameters, you can:
@@ -155,7 +170,11 @@ With connector parameters, you can:
 * template message body
 * allowList the recipients
 
-To make sure that mutt properly renders the HTML email, add following lines to `/etc/Muttrc.local`
+
+#### known caveats
+
+* HTML e-mail and mutt
+  * to make sure mutt sends HTML email with proper content-type header, add following lines to `/etc/Muttrc.local`
 
 ```
 # Local configuration for Mutt.
@@ -166,7 +185,7 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
-### telegram
+### telegram connector
 
 Sends **1on1** or **group chat** messages about jobs via [telegram messenger app](https://telegram.org/)
 
@@ -189,8 +208,71 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
+### matrix connector
 
-### msteams
+Sends messages to user-defined Matrix rooms.
+
+![Matrix](./images/matrix.png)
+
+The Matrix connector can send messages through a pre-defined user that you
+manually join into channels. In addition, you can setup matrixslurmbot to
+control this pre-defined user and have him join rooms upon invitation.
+
+The first thing you need is to add the proper parameters to the
+connectors/matrix section of the config file.
+
+To obtain the access token, you can run this command using curl:
+
+```bash
+curl -XPOST -d '{"type":"m.login.password", "user":"@myuser:matrix.org", "password":"mypassword"}' "https://matrix.org/_matrix/client/r0/login"
+```
+
+Which should get you a response akin to this one, containing the token:
+
+```json
+{
+    "user_id": "@myuser:matrix.org",
+    "access_token": "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93",
+    "home_server": "matrix.org",
+    "device_id": "DMIIOMEYBK",
+    "well_known": {
+        "m.homeserver": {
+            "base_url": "https://matrix-client.matrix.org/"
+        }
+    }
+}
+```
+
+Once you've done this, goslmailer will be able to send messages to any channel
+the configured user is a member of with a command like this:
+
+```bash
+sbatch --mail-type=ALL --mail-user='matrix:!VEbreVXXXkmLWjeGPi:matrix.org' --wrap "ls"
+```
+
+Where `!VEbreVXXXkmLWjeGPi:matrix.org` is the ID of the channel you want to send
+the message to. You can obtain this ID from the `Settings>Advanced` section of
+the room.
+
+#### Using the bot
+
+Instead of manually having the pre-defined user join certain rooms, you can use
+`matrixslurmbot` to control this user and have it join rooms automatically upon invitation.
+For this you just need to start the `matrixslurmbot`, pointing it to a config file identical to the one before using
+(you could strip it down to contain only the 'matrix' section).
+
+While the bot is running, any user can invite it to join a channel (e.g. `/invite
+@mybotuser:matrix.org`). The bot will join the channel and post the
+`--mail-user:...` argument to be used when submitting jobs in order to receive a message in that
+channel.
+
+In the event that the pre-defined user is alone in a channel (i.e. all normal
+users left), the bot will make the pre-defined user leave and forget the
+channel.
+
+---
+
+### msteams connector
 
 Sends a message to a preconfigured ms teams channel webhook.
 
@@ -206,7 +288,6 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 ---
 
 ## ToDo
-
 
 ---
 

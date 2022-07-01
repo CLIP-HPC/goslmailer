@@ -1,5 +1,10 @@
 # Example boilerplate code for a fully featured connector (spooling, rendering, lookups)
 
+connectorX is a sample boilerplate connector. 
+
+Delivers job notification (rendered template) over a TCP connection to the specified address:port.
+It is an example of how to use all of the 'extra' capabilities: lookups, rendertofile and spooling.
+
 Files you'll need to get started:
 
 * connector data structure [connector_data.go](./connector_data.go)
