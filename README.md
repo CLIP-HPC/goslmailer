@@ -5,13 +5,18 @@
 >
 > For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
 
-## Drop-in notification delivery solution for slurm that can do...
+## Drop-in notification delivery solution for slurm that can do:
 
-* message delivery to: **msteams**, **telegram**, **e-mail**
+* message delivery to: 
+  * [**matrix**](https://matrix.org/)
+  * [**telegram**](https://telegram.org/)
+  * [**msteams**](https://teams.com)
+  * **e-mail**
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
 * **templateable** messages ([readme](./templates/README.md))
-* message **throttling**
+* message **spooling** and **throttling**, [details here...](#spooling-and-throttling-of-messages---gobler-service)
+* easy to develop extensions for other protocols, [more here...](./connectors/connectorX/README.md) 
 
 ---
 
@@ -36,11 +41,20 @@ sbatch --mail-type=ALL --mail-user="mailto:useremailA,msteams:usernameB,telegram
 
 To support future additional receiver schemes, a [connector package](connectors/) has to be developed and its [configuration block](cmd/goslmailer/goslmailer.conf.annotated_example) present in configuration file.
 
+## Currently available connectors:
+
+* [**matrix**](#matrix-connector) bot --mail-user=`matrix:`roomId
+* [**telegram**](#telegram-connector) bot --mail-user=`telegram:`chatId
+* [**mailto**](#mailto-connector) --mail-user=`mailto:`email-addr
+* [**msteams**](#msteams-connector) webhook --mail-user=`msteams:`userid
+
+See each connector details below...
+
 ### If you would like to contribute to this project by developing a new connector, [here](./connectors/connectorX/README.md) is a heavily annotated connector boilerplate (fully functional) to help you get started.
 
 ---
 
-## Installation
+## Building and installing
 
 ### Build
 
@@ -71,51 +85,43 @@ Known caveats:
 make 
 ```
 
+### Install
 
-### goslmailer
+#### goslmailer
 
 * place binary in a path to your liking
 * place [goslmailer.conf](cmd/goslmailer/goslmailer.conf.annotated_example) here: `/etc/slurm/goslmailer.conf` (default path)
   * OR: anywhere else, but then run the binary with `GOSLMAILER_CONF=/path/to/gosl.conf` in environment
 * point slurm `MailProg` to the binary
 
-### gobler
+#### gobler
 
 * place binary in a path to your liking
 * place [gobler.conf](cmd/gobler/gobler.conf) in a path to your liking
 * start the service (with -c switch pointing to config file)
 
-### tgslurmbot
+#### tgslurmbot
 
 * place binary in a path to your liking
 * place [tgslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
-  * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
+  * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example) , so you can use the same one (other connectors configs are not needed)
 * start the service (with -c switch pointing to config file)
 
-### matrixslurmbot
+#### matrixslurmbot
 
 * place binary in a path to your liking
 * place [matrixslurmbot.conf](cmd/goslmailer/goslmailer.conf.annotated_example) in a path to your liking
-  * config file has the same format as goslmailer, so you can use the same one (other connectors configs are not needed)
+  * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example), so you can use the same one (other connectors configs are not needed)
 * start the service (with -c switch pointing to config file)
 
 
 ---
 
-## Currently available connectors:
-
-* **msteams** webhook --mail-user=`msteams:`userid
-* **telegram** bot --mail-user=`telegram:`chatId
-* **mailto** --mail-user=`mailto:`email-addr
-* **matrix** bot --mail-user=`matrix:`roomId
-
-See each connector details below...
 
 ## Spooling and throttling of messages - gobler service
 
 In high-throughput clusters or in situations where job/message spikes are common, it might not be advisable to try to send all of the incoming messages as they arrive.
 For these environments goslmailer can be configured to spool messages from certain connectors on disk, to be later processed by the **gobler** service.
-
 
 **gobler** is a daemon program that can be [configured](cmd/gobler/gobler.conf) to monitor specific spool directories for messages, process them and send out using the same connectors as goslmailer.
 
@@ -154,7 +160,7 @@ Specifies which receiver scheme is the default one, in case when user didn't spe
 
 ---
 
-### mailto
+### mailto connector
 
 Mailto covers for original slurm e-mail sending functionality, plus a little bit more.
 With connector parameters, you can:
@@ -164,7 +170,11 @@ With connector parameters, you can:
 * template message body
 * allowList the recipients
 
-To make sure that mutt properly renders the HTML email, add following lines to `/etc/Muttrc.local`
+
+#### known caveats
+
+* HTML e-mail and mutt
+  * to make sure mutt sends HTML email with proper content-type header, add following lines to `/etc/Muttrc.local`
 
 ```
 # Local configuration for Mutt.
@@ -175,7 +185,7 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
-### telegram
+### telegram connector
 
 Sends **1on1** or **group chat** messages about jobs via [telegram messenger app](https://telegram.org/)
 
@@ -198,23 +208,7 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
-
-### msteams
-
-Sends a message to a preconfigured ms teams channel webhook.
-
-![MS Teams card](./images/msteams.png)
-
-Since MS Teams does not provide with the option to send messages to users directly, only to channel webhooks, we have devised a way using MS Power Automate framework to pick up messages from this one configured *sink* channel and deliver them via private 1on1 chats to the recipient user.
-
-Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/CLIP-HPC/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
-A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
-
-See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
-
----
-
-### matrix
+### matrix connector
 
 Sends messages to user-defined Matrix rooms.
 
@@ -270,8 +264,22 @@ channel.
 
 ---
 
-## ToDo
+### msteams connector
 
+Sends a message to a preconfigured ms teams channel webhook.
+
+![MS Teams card](./images/msteams.png)
+
+Since MS Teams does not provide with the option to send messages to users directly, only to channel webhooks, we have devised a way using MS Power Automate framework to pick up messages from this one configured *sink* channel and deliver them via private 1on1 chats to the recipient user.
+
+Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as adaptive card [mention](https://github.com/CLIP-HPC/goslmailer/blob/main/templates/adaptive_card_template.json#L225) entity.
+A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
+
+See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
+
+---
+
+## ToDo
 
 ---
 
