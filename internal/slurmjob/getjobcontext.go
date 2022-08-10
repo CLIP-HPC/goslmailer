@@ -33,22 +33,22 @@ func (j *JobContext) GenerateHints(qosMap map[uint64]string) {
 	if j.IsJobFinished() {
 		// Check OUT_OF_MEMORY
 		if j.SlurmEnvironment.SLURM_JOB_STATE == "OUT_OF_MEMORY" {
-			j.Hints = append(j.Hints, "TIP: The job ran out of memory. Please re-submnit with increase memory requirements")
+			j.Hints = append(j.Hints, "TIP: The job ran out of memory. Please re-submit with increased memory requirements")
 			return
 		}
 
 		if j.SlurmEnvironment.SLURM_JOB_STATE == "TIMEOUT" {
-			j.Hints = append(j.Hints, "TIP: The job ran into a timeout. Please re-submnit with increase walltime requirements and potentially to a different QOS)")
+			j.Hints = append(j.Hints, "TIP: The job ran into a timeout. Please re-submit with increased walltime requirements and potentially to a different QOS)")
 			return
 		}
 
 		// Check memory consumption
 		if j.JobStats.ReqMem/2 > j.JobStats.MaxRSS {
-			j.Hints = append(j.Hints, "TIP: Please consider lowering the ammount of requested memory in the future, your job has consumed less then half of the requested memory.")
+			j.Hints = append(j.Hints, "TIP: Please consider lowering the amount of requested memory in the future, your job has consumed less than half of the requested memory.")
 		}
 		// check CPU time (16 cores requested only 1 used)
 		if j.JobStats.CPUTime/2 > j.JobStats.TotalCPU {
-			j.Hints = append(j.Hints, "TIP: Please consider lowering the amount of requested CPU cores in the future, your job has consumed less than half of requested CPU cores")
+			j.Hints = append(j.Hints, "TIP: Please consider lowering the amount of requested CPU cores in the future, your job has consumed less than half of the requested CPU cores")
 		}
 
 		// Check if runtime is half of the requested runtime
