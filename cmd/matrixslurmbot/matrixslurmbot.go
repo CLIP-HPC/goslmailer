@@ -14,6 +14,8 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
+const app = "matrixslurmbot"
+
 func leaveAndForgetRoom(c *mautrix.Client, rid id.RoomID, l *log.Logger) error {
 	l.Printf("Room - leaving: %s\n", rid)
 	_, err := c.LeaveRoom(rid)
@@ -88,13 +90,13 @@ func main() {
 	)
 
 	// parse command line params
-	cmd, err := cmdline.NewCmdArgs("matrixslurmbot")
+	cmd, err := cmdline.NewCmdArgs(app)
 	if err != nil {
 		log.Fatalf("ERROR: parse command line failed with: %q\n", err)
 	}
 
 	if *(cmd.Version) {
-		l = log.New(os.Stderr, "matrixslurmbot:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+		l = log.New(os.Stderr, app+":", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 		version.DumpVersion(l)
 		os.Exit(0)
 	}
@@ -152,20 +154,20 @@ func main() {
 	// do we need to keep any state at all?
 	syncer.OnEvent(client.Store.(*mautrix.InMemoryStore).UpdateState)
 
-        /*
-        //START code for responding to user messages
-        //disabled for now since it only works on unencrypted channels
-          
-	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, event *event.Event) {
-            //TODO: implement this for encrypted channels, only works for
-            //unencrypted right now
-	    body := event.Content.Raw["body"].(string)
-            if strings.HasPrefix(body, "!bot"){
-                client.SendText(event.RoomID, fmt.Sprintf("Sorry, I'm still a bit dumb. Use this switch in your job submission script and i'll get back to you:\n--mail-user=matrix:%s\n", string(event.RoomID)))
-            }
-	})
-        //END code for responding to user messages
-        */
+	/*
+		        //START code for responding to user messages
+		        //disabled for now since it only works on unencrypted channels
+
+			syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, event *event.Event) {
+		            //TODO: implement this for encrypted channels, only works for
+		            //unencrypted right now
+			    body := event.Content.Raw["body"].(string)
+		            if strings.HasPrefix(body, "!bot"){
+		                client.SendText(event.RoomID, fmt.Sprintf("Sorry, I'm still a bit dumb. Use this switch in your job submission script and i'll get back to you:\n--mail-user=matrix:%s\n", string(event.RoomID)))
+		            }
+			})
+		        //END code for responding to user messages
+	*/
 
 	syncer.OnEventType(event.StateMember, func(source mautrix.EventSource, event *event.Event) {
 		l.Printf("--------------------------------------------------------------------------------\n")

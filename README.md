@@ -8,10 +8,11 @@
 ## Drop-in notification delivery solution for slurm that can do:
 
 * message delivery to: 
+  * [**discord**](https://discord.com/)
   * [**matrix**](https://matrix.org/)
   * [**telegram**](https://telegram.org/)
   * [**msteams**](https://teams.com)
-  * **e-mail**
+  * [**e-mail**](https://en.wikipedia.org/wiki/Email)
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
 * **templateable** messages ([readme](./templates/README.md))
@@ -43,6 +44,7 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ## Currently available connectors:
 
+* [**discord**](#discord-connector) todo.
 * [**matrix**](#matrix-connector) bot --mail-user=`matrix:`roomId
 * [**telegram**](#telegram-connector) bot --mail-user=`telegram:`chatId
 * [**mailto**](#mailto-connector) --mail-user=`mailto:`email-addr
@@ -182,6 +184,23 @@ set content_type="text/html"
 ```
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
+
+---
+
+### discord connector
+
+#### Bot setup
+
+1. User settings -> Advanced -> Developer mode ON
+2. [Discord developer portal](https://discord.com/developers/applications) -> New Application -> Fill out BotName
+3. Once the application is saved, select *Bot* from left menu -> Add Bot -> message: "A wild bot has appeared!"
+4. Left menu: OAuth2 -> Copy Client ID
+5. Modify this url with the Client ID from 4. and open in browser: `https://discord.com/api/oauth2/authorize?client_id=<CLIENT-ID>&permissions=8&scope=bot`
+6. "An external application BotName wants to access your Discord Account" message -> Select server -> Continue
+7. Grant Administrator permissions -> yes/no/maybe ? -> Authorize
+8. [Discord developer portal](https://discord.com/developers/applications) -> Select BotName -> Bot menu -> Reset Token -> Copy and Save, to be used in discoslurmbot.conf
+
+
 
 ---
 
