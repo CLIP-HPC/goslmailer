@@ -3,6 +3,7 @@ package connectors
 import (
 	"log"
 
+	"github.com/CLIP-HPC/goslmailer/connectors/discord"
 	"github.com/CLIP-HPC/goslmailer/connectors/mailto"
 	"github.com/CLIP-HPC/goslmailer/connectors/matrix"
 	"github.com/CLIP-HPC/goslmailer/connectors/msteams"
@@ -58,6 +59,17 @@ func (c *Connectors) PopulateConnectors(conf *config.ConfigContainer, l *log.Log
 		case "matrix":
 			// For each recognized, call the connectorpkg.NewConnector() and...
 			con, err := matrix.NewConnector(v)
+			if err != nil {
+				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
+				break
+			}
+			l.Printf("%s connector configured.\n", k)
+			// ...asign its return object value to the connectors map.
+			(*c)[k] = con
+		case "discord":
+			// For each recognized, call the connectorpkg.NewConnector() and...
+			// todo: make this a little bit less ugly...
+			con, err := discord.NewConnector(v)
 			if err != nil {
 				l.Printf("Problem: %q with %s connector configuration. Ignoring.\n", err, k)
 				break
