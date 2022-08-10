@@ -1,5 +1,7 @@
 package mailto
 
+const connectorName = "mailto"
+
 type Connector struct {
 	name          string
 	mailCmd       string
@@ -9,3 +11,5 @@ type Connector struct {
 	allowList     string
 	blockList     string
 }
+
+var connMailto *Connector = new(Connector)

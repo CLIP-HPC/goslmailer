@@ -17,7 +17,8 @@ Example:
 * `{{ .Job.SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}`
 * `{{ .Job.JobStats.MaxRSS | humanBytes }}`
 
-[Example telegram html template](./telegramTemplate.html)
+* [Example telegram html template](./telegramTemplate.html)
+* [More template examples](./templates/)
 
 Structures:
 

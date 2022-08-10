@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/lookup"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
@@ -16,26 +17,29 @@ import (
 	telebot "gopkg.in/telebot.v3"
 )
 
-func NewConnector(conf map[string]string) (*Connector, error) {
-	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
-	c := Connector{
-		name:            conf["name"],
-		url:             conf["url"],
-		token:           conf["token"],
-		renderToFile:    conf["renderToFile"],
-		spoolDir:        conf["spoolDir"],
-		messageTemplate: conf["messageTemplate"],
-		useLookup:       conf["useLookup"],
-		format:          conf["format"],
-	}
+func init() {
+	connectors.Register(connectorName, connTelegram)
+}
+
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+
+	c.name = conf["name"]
+	c.url = conf["url"]
+	c.token = conf["token"]
+	c.renderToFile = conf["renderToFile"]
+	c.spoolDir = conf["spoolDir"]
+	c.messageTemplate = conf["messageTemplate"]
+	c.useLookup = conf["useLookup"]
+	c.format = conf["format"]
+
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	switch c.renderToFile {
 	case "no", "spool":
 		if c.spoolDir == "" {
-			return nil, errors.New("telegram spoolDir must be defined, aborting")
+			return errors.New("telegram spoolDir must be defined, aborting")
 		}
 	}
-	return &c, nil
+	return nil
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/lookup"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
@@ -16,32 +17,35 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func NewConnector(conf map[string]string) (*Connector, error) {
+func init() {
+	connectors.Register(connectorName, connDiscord)
+}
+
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+
 	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
-	c := Connector{
-		name:            conf["name"],
-		triggerString:   conf["triggerString"],
-		token:           conf["token"],
-		renderToFile:    conf["renderToFile"],
-		spoolDir:        conf["spoolDir"],
-		messageTemplate: conf["messageTemplate"],
-		useLookup:       conf["useLookup"],
-		format:          conf["format"],
-	}
+	c.name = conf["name"]
+	c.triggerString = conf["triggerString"]
+	c.token = conf["token"]
+	c.renderToFile = conf["renderToFile"]
+	c.spoolDir = conf["spoolDir"]
+	c.messageTemplate = conf["messageTemplate"]
+	c.useLookup = conf["useLookup"]
+	c.format = conf["format"]
 
 	switch {
 	// token must be present
 	case c.token == "":
-		return nil, errors.New("discord bot token must be defined, aborting")
+		return errors.New("discord bot token must be defined, aborting")
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	case c.renderToFile == "no" || c.renderToFile == "spool":
 		if c.spoolDir == "" {
-			return nil, errors.New("discord spoolDir must be defined, aborting")
+			return errors.New("discord spoolDir must be defined, aborting")
 		}
 
 	}
 
-	return &c, nil
+	return nil
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {

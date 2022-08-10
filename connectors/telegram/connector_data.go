@@ -2,6 +2,8 @@ package telegram
 
 import "log"
 
+const connectorName = "telegram"
+
 type Connector struct {
 	name            string
 	url             string
@@ -25,3 +27,5 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 	l.Println("................................................................................")
 
 }
+
+var connTelegram *Connector = new(Connector)

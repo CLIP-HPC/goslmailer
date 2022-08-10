@@ -1,9 +1,16 @@
 # goslmailer
 
-> **Info**
+> **News & Info**
+>
+> v2.4.0 
+>
+> * discord connector
+> * new connectors initialization code
+>
 > Now also works with SLURM < 21.08
 >
 > For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
+>
 
 ## Drop-in notification delivery solution for slurm that can do:
 
@@ -44,7 +51,7 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ## Currently available connectors:
 
-* [**discord**](#discord-connector) todo.
+* [**discord**](#discord-connector) bot --mail-user=`discord`:channelId
 * [**matrix**](#matrix-connector) bot --mail-user=`matrix:`roomId
 * [**telegram**](#telegram-connector) bot --mail-user=`telegram:`chatId
 * [**mailto**](#mailto-connector) --mail-user=`mailto:`email-addr
@@ -58,7 +65,11 @@ See each connector details below...
 
 ## Building and installing
 
-### Build
+### Option 1. Download latest precompiled binaries [here](https://github.com/CLIP-HPC/goslmailer/releases/latest)
+
+Unpack, follow [instructions](#install)
+
+### Option 2. Build
 
 #### Quick version, without end to end testing
 
@@ -116,6 +127,13 @@ make
   * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example), so you can use the same one (other connectors configs are not needed)
 * start the service (with -c switch pointing to config file)
 
+#### discoslurmbot
+
+* place binary in a path to your liking
+* place [discoslurmbot.conf](./cmd/discoslurmbot/discoslurmbot.conf) in a path to your liking
+  * config file has the same format as [goslmailer](cmd/goslmailer/goslmailer.conf.annotated_example), so you can use the same one (other connectors configs are not needed)
+* start the service (with -c switch pointing to config file)
+
 
 ---
 
@@ -151,6 +169,14 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 ---
 
 ## Connectors
+
+| connector | spooling/throttling capable (gobler) |
+|-----------|---------------------------|
+| discord   | yes                       |
+| matrix    | no                        |
+| telegram  | yes                       |
+| msteams   | yes                       |
+| mailto    | no                        |
 
 ### default connector
 
@@ -189,7 +215,14 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ### discord connector
 
-#### Bot setup
+Prerequisites for the discord connector:
+
+1. a discord bot must be created and
+2. the bot daemon service **discoslurmbot** must be running ([example config file](./cmd/discoslurmbot/discoslurmbot.conf)).
+3. once the bot is running, it will wake up on the configured `triggerString` and send the user a private message with slurm job submission instructions
+
+
+#### Discord Bot setup
 
 1. User settings -> Advanced -> Developer mode ON
 2. [Discord developer portal](https://discord.com/developers/applications) -> New Application -> Fill out BotName
@@ -200,8 +233,11 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 7. Grant Administrator permissions -> yes/no/maybe ? -> Authorize
 8. [Discord developer portal](https://discord.com/developers/applications) -> Select BotName -> Bot menu -> Reset Token -> Copy and Save, to be used in discoslurmbot.conf
 
+Or follow this [tutorial](https://discordpy.readthedocs.io/en/stable/discord.html)
 
+![Discord card](./images/discord.png)
 
+* discord bot and packaged developed using [discordgo](https://github.com/bwmarrin/discordgo) and with the help of _Discord Gophers_
 ---
 
 ### telegram connector
@@ -303,10 +339,6 @@ Users listed in the `--mail-user=msteams:userA,msteams:userB` will be sent as ad
 A [MS Power Automate workflow](https://powerautomate.microsoft.com/en-us/) monitors the configured *sink* channel, parses the received adaptive card jsons, locates the `mention` entity and delivers to it the copy of the message via private chat.
 
 See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_example)
-
----
-
-## ToDo
 
 ---
 

@@ -8,22 +8,28 @@ import (
 	"regexp"
 	"text/template"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 )
 
-func NewConnector(conf map[string]string) (*Connector, error) {
+func init() {
+	connectors.Register(connectorName, connMailto)
+}
+
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+	c.name = conf["name"]
+	c.mailCmd = conf["mailCmd"]
+	c.mailCmdParams = conf["mailCmdParams"]
+	c.mailTemplate = conf["mailTemplate"]
+	c.mailFormat = conf["mailFormat"]
+	c.allowList = conf["allowList"]
+	c.blockList = conf["blockList"]
+
 	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
-	c := Connector{
-		name:          conf["name"],
-		mailCmd:       conf["mailCmd"],
-		mailCmdParams: conf["mailCmdParams"],
-		mailTemplate:  conf["mailTemplate"],
-		mailFormat:    conf["mailFormat"],
-		allowList:     conf["allowList"],
-		blockList:     conf["blockList"],
-	}
-	return &c, nil
+	//
+	// if ok, return nil error
+	return nil
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 
@@ -13,14 +14,21 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
-func NewConnector(conf map[string]string) (*Connector, error) {
-	c := Connector{
-		username:   conf["username"],
-		token:      conf["token"],
-		homeserver: conf["homeserver"],
-		template:   conf["template"],
-	}
-	return &c, nil
+func init() {
+	connectors.Register(connectorName, connMatrix)
+}
+
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+
+	c.username = conf["username"]
+	c.token = conf["token"]
+	c.homeserver = conf["homeserver"]
+	c.template = conf["template"]
+
+	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
+	//
+	// if ok, return nil error
+	return nil
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {

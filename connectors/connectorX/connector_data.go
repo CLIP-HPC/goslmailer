@@ -10,6 +10,9 @@ package connectorX
 
 import "log"
 
+// Name of the connector, used in the init() function to Register() it to connectors package.
+const connectorName = "discord"
+
 // Connector structure contains configuration data read in from config file with connectorX.NewConnector().
 // Populate this structure with the configuration variables a new connector needs
 type Connector struct {
@@ -35,3 +38,6 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 	l.Println("................................................................................")
 
 }
+
+// Variable holding the connector configuration, mandatory
+var connConnectorX *Connector = new(Connector)

@@ -2,6 +2,8 @@ package discord
 
 import "log"
 
+const connectorName = "discord"
+
 type Connector struct {
 	name            string
 	triggerString   string
@@ -25,3 +27,5 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 	l.Println("................................................................................")
 
 }
+
+var connDiscord *Connector = new(Connector)

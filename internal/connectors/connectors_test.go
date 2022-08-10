@@ -5,6 +5,11 @@ import (
 	"log"
 	"testing"
 
+	_ "github.com/CLIP-HPC/goslmailer/connectors/discord"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/mailto"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 )
@@ -13,9 +18,6 @@ var connectorsExpected = []string{"msteams", "mailto"}
 var connectorsExpectedNot = []string{"textfile"}
 
 func TestPopulateConnectors(t *testing.T) {
-	var (
-		conns = make(connectors.Connectors)
-	)
 
 	wr := bytes.Buffer{}
 	l := log.New(&wr, "Testing: ", log.Llongfile)
@@ -26,7 +28,7 @@ func TestPopulateConnectors(t *testing.T) {
 		t.Fatalf("MAIN: getConfig(gobconfig) failed: %s", err)
 	}
 
-	err = conns.PopulateConnectors(cfg, l)
+	err = connectors.ConMap.PopulateConnectors(cfg, l)
 	if err != nil {
 		t.Fatalf("conns.PopulateConnectors() FAILED with %s\n", err)
 	}
@@ -34,7 +36,7 @@ func TestPopulateConnectors(t *testing.T) {
 	t.Run("connectorsExpected", func(t *testing.T) {
 		for _, v := range connectorsExpected {
 			t.Logf("Testing for connector %s", v)
-			if _, ok := conns[v]; !ok {
+			if _, ok := connectors.ConMap[v]; !ok {
 				t.Fatalf("Connector %s not configured!", v)
 			} else {
 				t.Logf("FOUND... good!\n")
@@ -44,7 +46,7 @@ func TestPopulateConnectors(t *testing.T) {
 	t.Run("connectorsExpectedNot", func(t *testing.T) {
 		for _, v := range connectorsExpectedNot {
 			t.Logf("Testing for connector %s", v)
-			if _, ok := conns[v]; ok {
+			if _, ok := connectors.ConMap[v]; ok {
 				t.Fatalf("Connector %s configured but must NOT be!", v)
 			} else {
 				t.Logf("NOT FOUND... good!\n")
