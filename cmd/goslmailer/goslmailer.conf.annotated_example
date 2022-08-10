@@ -33,6 +33,12 @@
       "useLookup": "no",
       "format": "MarkdownV2"
     },
+    "discord": {
+      "name": "DiscoSlurmBot",                      # name that is used in the bot welcome message
+      "triggerString": "showmeslurm",               # string (in channel or DM) that triggers the bot to respond with an instructional DM to the user
+      "token": "PasteBotTokenHere",                 # place to put the bot token
+      "messageTemplate": "/path/to/template.md"     # template file to use
+    }
     "matrix": {
       "username": "@myuser:matrix.org",
       "token": "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93",

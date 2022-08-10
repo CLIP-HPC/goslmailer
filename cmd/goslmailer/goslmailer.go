@@ -6,6 +6,11 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/CLIP-HPC/goslmailer/connectors/discord"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/mailto"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
@@ -20,7 +25,6 @@ func main() {
 	var (
 		ic      invocationContext
 		job     slurmjob.JobContext
-		conns   = make(connectors.Connectors)
 		logFile io.Writer
 	)
 
@@ -77,7 +81,8 @@ func main() {
 	job.GenerateHints(cfg.QosMap)
 
 	// populate map with configured referenced connectors
-	conns.PopulateConnectors(cfg, log)
+	//conns.PopulateConnectors(cfg, log)
+	connectors.ConMap.PopulateConnectors(cfg, log)
 
 	// Iterate over 'Receivers' map and for each call the connector.SendMessage() (if the receiver scheme is configured in conf file AND has an object in connectors map)
 	if ic.Receivers == nil {
@@ -89,7 +94,7 @@ func main() {
 		if err != nil {
 			log.Printf("ERROR in message.NewMsgPack(%s): %q\n", v.scheme, err)
 		}
-		con, ok := conns[v.scheme]
+		con, ok := connectors.ConMap[v.scheme]
 		if !ok {
 			log.Printf("%s connector is not initialized for target %s. Ignoring.\n", v.scheme, v.target)
 		} else {

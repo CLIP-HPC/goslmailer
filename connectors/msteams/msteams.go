@@ -10,30 +10,34 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/lookup"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 	"github.com/CLIP-HPC/goslmailer/internal/spool"
 )
 
-func NewConnector(conf map[string]string) (*Connector, error) {
-	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
-	c := Connector{
-		name:                 conf["name"],
-		url:                  conf["url"],
-		renderToFile:         conf["renderToFile"],
-		spoolDir:             conf["spoolDir"],
-		adaptiveCardTemplate: conf["adaptiveCardTemplate"],
-		useLookup:            conf["useLookup"],
-	}
+func init() {
+	connectors.Register(connectorName, connMsteams)
+}
+
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+
+	c.name = conf["name"]
+	c.url = conf["url"]
+	c.renderToFile = conf["renderToFile"]
+	c.spoolDir = conf["spoolDir"]
+	c.adaptiveCardTemplate = conf["adaptiveCardTemplate"]
+	c.useLookup = conf["useLookup"]
+
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	switch c.renderToFile {
 	case "no", "spool":
 		if c.spoolDir == "" {
-			return nil, errors.New("spoolDir must be defined, aborting")
+			return errors.New("spoolDir must be defined, aborting")
 		}
 	}
-	return &c, nil
+	return nil
 }
 
 func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.Logger) error {

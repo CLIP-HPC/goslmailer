@@ -10,36 +10,41 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/lookup"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 	"github.com/CLIP-HPC/goslmailer/internal/spool"
 )
 
-// NewConnector instantiates a connectorX.Connector structure with values read from config file.
-// Mandatory.
-// Call has to be added here: ../../internal/connectors/connectors.go:25
-func NewConnector(conf map[string]string) (*Connector, error) {
-	// declare the Connector structure and assign the values from config file, whatever the new connector needs
-	c := Connector{
-		name:         conf["name"],
-		addr:         conf["addr"],
-		port:         conf["port"],
-		templateFile: conf["templateFile"],
-		renderToFile: conf["renderToFile"],
-		spoolDir:     conf["spoolDir"],
-		useLookup:    conf["useLookup"],
-	}
+// init registers the new connector with the connectors package
+func init() {
+	connectors.Register(connectorName, connConnectorX)
+}
+
+// ConfigConnector fills out the package Connector structure with values from config file.
+// Recommended to also do sanity checking of config values here. Mandatory.
+// Makes connectorX.Connector type satisfy the connectors.Connector interface.
+func (c *Connector) ConfigConnector(conf map[string]string) error {
+	// Fill out the Connector structure with values from config file
+	c.name = conf["name"]
+	c.addr = conf["addr"]
+	c.port = conf["port"]
+	c.templateFile = conf["templateFile"]
+	c.renderToFile = conf["renderToFile"]
+	c.spoolDir = conf["spoolDir"]
+	c.useLookup = conf["useLookup"]
+
 	// Here you can do sanity checking and defaulting if needed.
 	// e.g.
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	switch c.renderToFile {
 	case "no", "spool":
 		if c.spoolDir == "" {
-			return nil, errors.New("spoolDir must be defined, aborting")
+			return errors.New("spoolDir must be defined, aborting")
 		}
 	}
-	return &c, nil
+	return nil
 }
 
 // SendMessage is the main method of the connector code, it usually does something like:

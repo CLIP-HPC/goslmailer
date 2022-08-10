@@ -5,6 +5,11 @@ import (
 	"os"
 	"sync"
 
+	_ "github.com/CLIP-HPC/goslmailer/connectors/discord"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/mailto"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
@@ -20,8 +25,7 @@ type MsgList []message.MessagePack
 func main() {
 
 	var (
-		conns = make(connectors.Connectors)
-		wg    sync.WaitGroup
+		wg sync.WaitGroup
 	)
 
 	// parse command line params
@@ -30,7 +34,7 @@ func main() {
 		log.Fatalf("ERROR: parse command line failed with: %q\n", err)
 	}
 
-	if *(cmd.Version) == true {
+	if *(cmd.Version) {
 		l := log.New(os.Stderr, "gobler:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 		version.DumpVersion(l)
 		os.Exit(0)
@@ -56,7 +60,7 @@ func main() {
 	cfg.DumpConfig(l)
 
 	// populate map with configured referenced connectors
-	err = conns.PopulateConnectors(cfg, l)
+	err = connectors.ConMap.PopulateConnectors(cfg, l)
 	if err != nil {
 		l.Printf("MAIN: PopulateConnectors() failed with: %s\n", err)
 	}
@@ -74,7 +78,7 @@ func main() {
 				continue
 			}
 			// func (cm *conMon) SpinUp(conns connectors.Connectors, wg sync.WaitGroup, l *log.Logger) error {
-			err = cm.SpinUp(conns, &wg, l)
+			err = cm.SpinUp(connectors.ConMap, &wg, l)
 			if err != nil {
 				l.Printf("MAIN: SpinUp(%s) failed with: %s\n", con, err)
 			}

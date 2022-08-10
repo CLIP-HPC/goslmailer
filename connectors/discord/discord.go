@@ -1,4 +1,4 @@
-package telegram
+package discord
 
 import (
 	"bytes"
@@ -14,17 +14,18 @@ import (
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 	"github.com/CLIP-HPC/goslmailer/internal/spool"
-	telebot "gopkg.in/telebot.v3"
+	"github.com/bwmarrin/discordgo"
 )
 
 func init() {
-	connectors.Register(connectorName, connTelegram)
+	connectors.Register(connectorName, connDiscord)
 }
 
 func (c *Connector) ConfigConnector(conf map[string]string) error {
 
+	// here we need some test if the connectors "minimal" configuration is satisfied, e.g. must have url at minimum
 	c.name = conf["name"]
-	c.url = conf["url"]
+	c.triggerString = conf["triggerString"]
 	c.token = conf["token"]
 	c.renderToFile = conf["renderToFile"]
 	c.spoolDir = conf["spoolDir"]
@@ -32,13 +33,18 @@ func (c *Connector) ConfigConnector(conf map[string]string) error {
 	c.useLookup = conf["useLookup"]
 	c.format = conf["format"]
 
+	switch {
+	// token must be present
+	case c.token == "":
+		return errors.New("discord bot token must be defined, aborting")
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
-	switch c.renderToFile {
-	case "no", "spool":
+	case c.renderToFile == "no" || c.renderToFile == "spool":
 		if c.spoolDir == "" {
-			return errors.New("telegram spoolDir must be defined, aborting")
+			return errors.New("discord spoolDir must be defined, aborting")
 		}
+
 	}
+
 	return nil
 }
 
@@ -51,17 +57,17 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		buffer  bytes.Buffer
 	)
 
-	l.Println("................... sendToTelegram START ........................................")
+	l.Println("................... sendTodiscord START ........................................")
 
 	// debug purposes
 	c.dumpConnector(l)
 
 	// spin up new bot
-	tb, err := telebot.NewBot(telebot.Settings{
-		Token: c.token,
-	})
+	// Create a new Discord session using the provided bot token.
+	dg, err := discordgo.New("Bot " + c.token)
 	if err != nil {
-		l.Fatal(err)
+		l.Println("error creating Discord session,", err)
+		return err
 	}
 
 	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
@@ -74,24 +80,11 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 
 	l.Printf("Sending to targetUserID: %s\n", enduser)
 
-	// get chat ID which comes from --mail-user=telegram:cID switch
-	cID, err := strconv.ParseInt(enduser, 10, 64)
-	if err != nil {
-		l.Printf("cID strconv failed %s", err)
-		return err
-	}
-
-	chat, err := tb.ChatByID(cID)
-	if err != nil {
-		l.Printf("chatbyusername failed %s", err)
-		return err
-	}
-
 	// don't render template when using spool
 	if c.renderToFile != "spool" {
 		// buffer to place rendered json in
 		buffer = bytes.Buffer{}
-		//err := c.telegramRenderTemplate(mp.JobContext, enduser, &buffer)
+		//err := c.discordRenderTemplate(mp.JobContext, enduser, &buffer)
 		err := renderer.RenderTemplate(c.messageTemplate, c.format, mp.JobContext, enduser, &buffer)
 		if err != nil {
 			return err
@@ -101,11 +94,11 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	// this can be: "yes", "spool", anythingelse
 	switch c.renderToFile {
 	case "yes":
-		// render markdown template to a file in working directory - debug purposes
+		// render template to a file in working directory - debug purposes
 		// prepare outfile name
 		t := strconv.FormatInt(time.Now().UnixNano(), 10)
 		l.Printf("Time: %s\n", t)
-		outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".md"
+		outFile = "rendered-" + mp.JobContext.SLURM_JOB_ID + "-" + enduser + "-" + t + ".msg"
 		res, err := io.ReadAll(&buffer)
 		if err != nil {
 			return err
@@ -125,17 +118,18 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 			}
 		}
 	default:
-		//https://core.telegram.org/bots/api#formatting-options
-		msg, err := tb.Send(chat, buffer.String(), c.format)
+		// Then we send the message through the channel we created.
+		//_, err = dg.ChannelMessageSend(enduser, "A successfull message at "+time.Now().String())
+		_, err = dg.ChannelMessageSend(enduser, buffer.String())
 		if err != nil {
-			l.Printf("bot.Send() Failed: %s\n", err)
+			l.Printf("error sending DM message: %s\n", err)
 			dts = true
-			//return err
-			e = err
 		} else {
-			l.Printf("bot.Send() successful, messageID: %d\n", msg.ID)
+			l.Printf("bot.Send() successful\n")
 			dts = false
 		}
+
+		dg.Close()
 	}
 
 	// save mp to spool if we're allowed (not allowed when called from gobler, to prevent gobs multiplying)
@@ -148,7 +142,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		}
 	}
 
-	l.Println("................... sendToTelegram END ..........................................")
+	l.Println("................... sendTodiscord END ..........................................")
 
 	return e
 }

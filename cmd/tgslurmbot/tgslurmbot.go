@@ -13,6 +13,8 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
+const app = "tgslurmbot"
+
 func main() {
 
 	var (
@@ -21,13 +23,13 @@ func main() {
 	)
 
 	// parse command line params
-	cmd, err := cmdline.NewCmdArgs("tgslurmbot")
+	cmd, err := cmdline.NewCmdArgs(app)
 	if err != nil {
 		log.Fatalf("ERROR: parse command line failed with: %q\n", err)
 	}
 
 	if *(cmd.Version) == true {
-		l = log.New(os.Stderr, "tgslurmbot:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
+		l = log.New(os.Stderr, app+":", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 		version.DumpVersion(l)
 		os.Exit(0)
 	}
