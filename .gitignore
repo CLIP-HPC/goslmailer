@@ -6,6 +6,7 @@ gobler
 goslmailer
 tgslurmbot
 matrixslurmbot
+discoslurmbot
 !cmd/**
 endly_linux_*.tar.gz
 test_e2e/nohup.out

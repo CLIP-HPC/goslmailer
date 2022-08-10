@@ -174,14 +174,14 @@
           
           {
             "type":"TextBlock",
-            "text":"TIP: Please consider lowering the ammount of requested memory in the future, your job has consumed less then half of the requested memory.",
+            "text":"TIP: Please consider lowering the amount of requested memory in the future, your job has consumed less than half of the requested memory.",
             "wrap":true,
             "color":"Attention"
           },
           
           {
             "type":"TextBlock",
-            "text":"TIP: Please consider lowering the amount of requested CPU cores in the future, your job has consumed less than half of requested CPU cores",
+            "text":"TIP: Please consider lowering the amount of requested CPU cores in the future, your job has consumed less than half of the requested CPU cores",
             "wrap":true,
             "color":"Attention"
           },
