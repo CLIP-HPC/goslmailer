@@ -2,6 +2,8 @@ package msteams
 
 import "log"
 
+const connectorName = "msteams"
+
 type Connector struct {
 	name string
 	url  string
@@ -22,3 +24,5 @@ func (c *Connector) dumpConnector(l *log.Logger) {
 	l.Println("................................................................................")
 
 }
+
+var connMsteams *Connector = new(Connector)

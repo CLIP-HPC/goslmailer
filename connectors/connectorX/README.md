@@ -14,7 +14,8 @@ Files you'll need to get started:
 
 ## Exercise for the reader:
 
-To make this connector work, add the missing code block to the [connectors package](../../internal/connectors/connectors.go).
+To make this connector work, add the missing blank import to [goslmailer main package](../../cmd/goslmailer/goslmailer.go) to trigger init().
+
 Recompile and try it out.
 
 To verify it works:
