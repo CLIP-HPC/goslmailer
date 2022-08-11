@@ -4,11 +4,11 @@ import (
 	"testing"
 )
 
-var qosMaxRuntimeMap = map[uint64]string{
-	3600:    "RAPID",
-	28800:   "SHORT",
-	172800:  "MEDIUM",
-	1209600: "LONG",
+var qosMaxRuntimeMap = map[string]uint64{
+	"RAPID":  3600,
+	"SHORT":  28800,
+	"MEDIUM": 172800,
+	"LONG":   1209600,
 }
 
 func TestCalculateOptimalQos(t *testing.T) {

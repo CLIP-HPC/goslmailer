@@ -1,0 +1,34 @@
+# general configuration
+logfile = "/tmp/goslmailer.log"
+defaultconnector = "msteams"
+
+[binpaths]
+sacct="/usr/bin/sacct"
+sstat="/usr/bin/sstat"
+
+[connectors.msteams]
+name = "gobler.conf"
+renderToFile = "no"
+spoolDir = "/tmp"
+adaptiveCardTemplate = "/etc/slurm/adaptive_card_template.json"
+url = "https://msteams/webhook/url"
+useLookup = "GECOS"
+monitorT = "20000ms"
+pickerT = "5000ms"
+psBufLen = "3"
+numSenders = "4"
+maxMsgPU = "5"
+
+[connectors.mailto]
+name = "original slurm mail functionality, extended."
+mailCmd = "/etc/slurm/mail.sh"
+mailCmdParams = "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\""
+mailTemplate = "/etc/slurm/mailTemplate.tmpl"
+allowList = "pja"
+blockList = ""
+spoolDir = "/tmp/mailspool"
+monitorT = "200"
+pickerT = "60"
+
+[connectors.textfile]
+path = "/tmp"

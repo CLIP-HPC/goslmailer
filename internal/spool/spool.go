@@ -55,7 +55,6 @@ func (s *spool) DepositGob(m *message.MessagePack) error {
 	genc := gob.NewEncoder(f)
 	err = genc.Encode(*m)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	// todo: proper logging

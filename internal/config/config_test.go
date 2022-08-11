@@ -20,7 +20,10 @@ func TestConfig(t *testing.T) {
 			c := config.NewConfigContainer()
 			e := c.GetConfig(testDir + "/" + f.Name())
 			if _, ok := c.Connectors["msteams"]; e != nil || !ok {
-				t.Fatalf("Test %s failed.\n", f.Name())
+				t.Fatalf("Test %s failed with: %s\n", f.Name(), e)
+			}
+			if v, ok := c.Connectors["msteams"]["url"]; !ok || v != "https://msteams/webhook/url" {
+				t.Fatalf("Test %s failed finding connectors.msteams.url\n", f.Name())
 			}
 		})
 	}
