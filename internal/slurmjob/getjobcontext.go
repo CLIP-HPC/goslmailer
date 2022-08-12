@@ -54,6 +54,7 @@ func calculateOptimalQOS(qosMap qosMapQL, runtime uint64) string {
 		}
 	}
 
+	// here, we're basically in undefined area? no qosmap was passed, what now?
 	return "LONG"
 	// or
 	//return keys[len(keys)-1].qos

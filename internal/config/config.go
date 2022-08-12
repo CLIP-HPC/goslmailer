@@ -46,18 +46,25 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 		return err
 	}
 
+	cc.testNsetBinPaths()
+
+	return nil
+}
+
+func (cc *ConfigContainer) testNsetBinPaths() error {
+
 	if cc.Binpaths == nil {
 		cc.Binpaths = make(map[string]string)
 	}
 
-	// set default paths
+	// default paths
 	defaultpaths := map[string]string{
 		"sacct": "/usr/bin/sacct",
 		"sstat": "/usr/bin/sstat",
 	}
 
 	for key, path := range defaultpaths {
-		if _, exists := cc.Binpaths[key]; !exists {
+		if val, exists := cc.Binpaths[key]; !exists || val == "" {
 			cc.Binpaths[key] = path
 		}
 	}

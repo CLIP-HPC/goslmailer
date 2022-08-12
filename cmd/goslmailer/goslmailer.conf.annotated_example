@@ -16,7 +16,7 @@
     },                                              #  available lookups ("GECOS", "none")
     "mailto": {
       "name": "original slurm mail functionality, extended.",
-      "mailCmd": "/usr/bin/mutt",                        # mail client to call
+      "mailCmd": "/usr/bin/mutt",                        # mail client to use
       "mailCmdParams": "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\"",
       "mailTemplate": "/etc/slurm/mailTemplate.tmpl",    # message body template
       "mailFormat": "HTML",                              # `HTML` or `text` (can use telegram html in templates/)
@@ -24,7 +24,7 @@
     },
     "telegram": {
       "name": "telegram bot",                       # bot uses this in hello message "Welcome to "name""
-      "url": "",                                    # unused
+      "url": "",                                    # unused, leave empty, might change in the future
       "token": "PasteHereTelegramBotToken",         # token obtained when creating the bot with botfather
       "renderToFile": "no",                         # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
       "spoolDir": "/tmp/telegramgobs",              # where to spool

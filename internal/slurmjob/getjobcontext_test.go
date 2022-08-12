@@ -11,6 +11,16 @@ var qosMaxRuntimeMap = map[string]uint64{
 	"LONG":   1209600,
 }
 
+func TestEmptyQoSMap(t *testing.T) {
+
+	var emptyQoSMap = qosMapQL{}
+
+	qos := calculateOptimalQOS(emptyQoSMap, 1000)
+	if qos != "LONG" {
+		t.Errorf("Wrong QOS got: %s, want: LONG", qos)
+	}
+}
+
 func TestCalculateOptimalQos(t *testing.T) {
 	qos := calculateOptimalQOS(qosMaxRuntimeMap, 600)
 	if qos != "RAPID" {
@@ -28,6 +38,11 @@ func TestCalculateOptimalQos(t *testing.T) {
 	}
 
 	qos = calculateOptimalQOS(qosMaxRuntimeMap, 175000)
+	if qos != "LONG" {
+		t.Errorf("Wrong QOS got: %s, want: LONG", qos)
+	}
+
+	qos = calculateOptimalQOS(qosMaxRuntimeMap, 2000000)
 	if qos != "LONG" {
 		t.Errorf("Wrong QOS got: %s, want: LONG", qos)
 	}
@@ -143,7 +158,7 @@ func TestSubjectParsing(t *testing.T) {
 
 	// parse error message when wrong subject line
 	subject = "slurm job x"
-	env, err = parseSubjectLine(subject)
+	_, err = parseSubjectLine(subject)
 	if err == nil {
 		t.Fatalf("No error thrown for wrong subject")
 	}

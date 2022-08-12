@@ -7,12 +7,66 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 )
 
 const con = "msteams"
+
+type timesTests []struct {
+	name    string
+	t       string
+	want    time.Duration
+	wanterr bool
+}
+
+func TestGetConfTime(t *testing.T) {
+	var tt = timesTests{
+		{
+			name:    "testEmpty",
+			t:       "",
+			want:    -1 * time.Second,
+			wanterr: true,
+		},
+		{
+			name:    "test1000ms",
+			t:       "1000ms",
+			want:    1 * time.Second,
+			wanterr: false,
+		},
+		{
+			name:    "test1s",
+			t:       "1",
+			want:    1 * time.Second,
+			wanterr: false,
+		},
+		{
+			name:    "testJunk",
+			t:       "asd",
+			want:    -1 * time.Second,
+			wanterr: true,
+		},
+	}
+
+	for k, v := range tt {
+		t.Logf("Running test %d", k)
+		t.Run(v.name, func(t *testing.T) {
+			got, err := getConfTime(v.t)
+			t.Logf("Test %q: GOT: %v WANT: %v WANTERR: %v", v.name, got, v.want, v.wanterr)
+			switch {
+			case !v.wanterr && err != nil:
+				t.Fatalf("FAILED: test %q didn't want error and got one", v.name)
+			case v.wanterr && err == nil:
+				t.Fatalf("FAILED: test %q wanted error and got none", v.name)
+			case v.want != got:
+				t.Fatalf("FAILED: test %q wanted: %v and got: %v", v.name, v.want, got)
+			}
+		})
+	}
+	// todo
+}
 
 func TestConmonGoRoutines(t *testing.T) {
 	var (
