@@ -5,8 +5,25 @@
 > v2.5.0
 >
 > New: In addition to json, now supports [TOML](https://toml.io/en/) configuration files (.toml file suffix)
->   * [json sample config](./cmd/goslmailer/goslmailer.conf.annotated_example)
->   * [toml sample config](./cmd/goslmailer/goslmailer.toml.annotated_example)
+>   * [goslmailer json sample config](./cmd/goslmailer/goslmailer.conf.annotated_example)
+>   * [goslmailer toml sample config](./cmd/goslmailer/goslmailer.toml.annotated_example)
+>   * [gobler toml sample config](./cmd/gobler/gobler.toml)
+>
+> **BREAKING CHANGE**: `qosmap` changed its format from map[int]string to map[string]int.
+> Adopt the [goslmailer config](./cmd/goslmailer/goslmailer.conf.annotated_example) file accordingly.
+> ```
+>  "qosmap": {              # map of your sites configured QoSes, with their timelimits (seconds), used for hint generation
+> -   "3600": "RAPID",
+> -   "28800": "SHORT",
+> -   "172800": "MEDIUM",
+> -   "1209600": "LONG"
+>  "qosmap": {              # map of your sites configured QoSes, with their timelimits (seconds), used for hint generation
+> +   "RAPID": 3600,
+> +   "SHORT": 28800,
+> +   "MEDIUM": 172800,
+> +   "LONG": 1209600
+>  }
+> ```
 >
 > v2.4.0 
 >

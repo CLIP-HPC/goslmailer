@@ -1,0 +1,125 @@
+init:
+
+defaults:
+  message: "Running test $i from $twd"
+  systempaths:
+    - $bwd
+
+pipeline:
+
+  print_welcome:
+    description: "Current test"
+    action: workflow:print
+    style: 1
+
+  deploy_conf_files:
+    action: storage:copy
+    source:
+      URL: $twd/conf
+    dest:
+      URL: /tmp
+
+  deploy_sacct_files:
+    action: storage:copy
+    source:
+      URL: $twd/sacct
+    dest:
+      URL: /tmp
+
+  run_goslmailer:
+    action: exec:run
+    checkError: true
+    env:
+      GOSLMAILER_CONF: /tmp/goslmailer.toml
+    commands:
+      - source $twd/slurm_env/slurmenv.sh
+      - goslmailer -s "Slurm Job_id=1052477 Name=endlyJobStart Began, Queued time 2-00:04:18" telegram:12345
+      - goslmailer -s "Slurm Job_id=1052477 Name=endlyJobStart Began, Queued time 2-00:04:18" telegram:12345
+      - goslmailer -s "Slurm Job_id=1052477 Name=endlyJobStart Began, Queued time 2-00:04:18" telegram:12345
+
+  test_assert_goslmailer:
+    action: validator:assert
+    expect:
+      - '/Deposit gob OK!/'
+      - '/Deposit gob OK!/'
+      - '/Deposit gob OK!/'
+    actual:
+      - $run_goslmailer.Cmd[1].Stdout
+      - $run_goslmailer.Cmd[2].Stdout
+      - $run_goslmailer.Cmd[3].Stdout
+
+  clear_gobler_log:
+    action: exec:run
+    checkError: false
+    commands:
+      - truncate -s0 /tmp/gobler_test06.log
+
+  run_gobler:
+    action: process:start
+    watch: true
+    immuneToHangups: true
+    command: gobler
+    arguments:
+      - -c
+      - /tmp/gobler.toml
+
+  run_sleep:
+    action: exec:run
+    checkError: true
+    commands:
+      - sleep 5
+
+  stop_gobler:
+    action: process:stop
+    pid: $run_gobler.Pid
+
+
+  # debug_gobler:
+  #   action: workflow:print
+  #   message: $AsJSON($run_gobler)
+
+  read_gobler_log:
+    action: exec:run
+    checkError: true
+    commands:
+      - cat /tmp/gobler_test06.log
+
+
+  # https://github.com/viant/assertly#validation
+  test_assert_gobler:
+    action: validator:assert
+    expect:
+      - '~/Send successful to file: rendered-1052477-12345-/'
+      - '~/SENDER telegram#\d: Gob deleted/'
+    actual:
+      - $read_gobler_log.Cmd[0].Stdout
+      - $read_gobler_log.Cmd[0].Stdout
+
+  grep_suppression:
+    action: exec:run
+    checkError: true
+    env:
+      TERM: dumb
+    commands:
+    - grep "Rate limiting triggered. 2 additonal notificiations have been suppressed" $WorkingDirectory()/rendered-1052477-12345-*.md && echo "FOUND rate limiting"
+
+  test_grep_suppression:
+    action: validator:assert
+    expect:
+      - '~/FOUND rate limiting/'
+    actual:
+      - $grep_suppression.Cmd[0].Stdout
+
+  # todo:
+  #   add test:
+  #     jq . rendered.json >/dev/null || echo FAILED
+
+        #  debug_gosl:
+        #    action: workflow:print
+        #    message: $AsJSON($run_goslmailer)
+
+        #  catch:
+        #    description: "ERROR CAUGHT BUT GOOD!"
+        #    action: workflow:print
+        #    message: CAUGHT $error.Error
+

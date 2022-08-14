@@ -55,6 +55,8 @@ func (s *sender) SenderWorker(psCh <-chan psGob, psfCh chan<- psGob, wg *sync.Wa
 		}
 
 		// modify mp: inject the deleted message count from picker
+		// todo: this causes panic if malformed message reaches this point, example empty MessagePack saved to disk, no JobContext inside (nil)
+		// see: BUGS.md
 		mp.JobContext.PrunedMessageCount = msg.deletedCount
 
 		// useSpool == false when called from here, gob is already on disk!

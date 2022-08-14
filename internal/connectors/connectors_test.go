@@ -12,6 +12,7 @@ import (
 	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/message"
 )
 
 var connectorsExpected = []string{"msteams", "mailto"}
@@ -53,4 +54,28 @@ func TestPopulateConnectors(t *testing.T) {
 			}
 		}
 	})
+}
+
+type testCon struct{}
+
+func (tc testCon) ConfigConnector(conf map[string]string) error {
+	return nil
+}
+
+func (tc testCon) SendMessage(*message.MessagePack, bool, *log.Logger) error {
+	return nil
+}
+
+func TestRegister(t *testing.T) {
+	tc := testCon{}
+
+	err := connectors.Register("test", tc)
+	if err != nil {
+		t.Fatalf("FAILED to register %q connector", "test")
+	}
+
+	err = connectors.Register("test", tc)
+	if err == nil {
+		t.Fatalf("FAILED registering already registered %q connector", "test")
+	}
 }
