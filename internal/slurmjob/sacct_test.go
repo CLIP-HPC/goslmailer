@@ -132,3 +132,33 @@ func TestParseSacctMetricsEmptyInput(t *testing.T) {
 	}
 
 }
+
+func TestParseByteSize(t *testing.T) {
+	tests := []struct {
+		input string
+		want  uint64
+	}{
+		{
+			input: "0.01M",
+			want:  10485,
+		},
+		{
+			input: "1M",
+			want:  1048576,
+		},
+		{
+			input: "1K",
+			want:  1024,
+		},
+	}
+
+	for _, v := range tests {
+		t.Run("Test: "+v.input, func(t *testing.T) {
+			got := parseByteSize(v.input)
+			if got != v.want {
+				t.Fatalf("FAIL: want: %d got: %d\n", v.want, got)
+			}
+
+		})
+	}
+}

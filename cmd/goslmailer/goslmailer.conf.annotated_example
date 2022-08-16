@@ -1,37 +1,36 @@
-{
+{                                                   # don't forget to remove the '#' comments if using this template
   "logfile": "/tmp/goslmailer.log",                 # if specified; append logs to this file; else; dump to stderr
-  "binpaths": {                                    # paths to required (slurm) binaries
+  "binpaths": {                                     # paths to slurm binaries (optional, will default to these if not specified)
     "sacct":"/usr/bin/sacct",
     "sstat":"/usr/bin/sstat"
   },
   "defaultconnector": "msteams",                    # default connector to be used for message delivery for receivers without full 'connector:user' specification
-  "connectors": {                                   # map of connector configurations
+  "connectors": {                                   # map of connector configurations, remove any connectors that you don't wish to expose to the users
     "msteams": {                                    # each connector has it's own map of config attributes
       "name": "dev channel",                        # unused
-      "spoolDir": "/tmp",                           # see below.
-      "renderToFile": "yes",                        # if "yes"; dump rendered templates to working dir; else if "spool"; dump to spoolDir; else; send to teams url
+      "renderToFile": "yes",                        # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
+      "spoolDir": "/tmp",                           # where to spool
       "url": "https://msteams/webhook/url",         # ms teams webhook url
       "adaptiveCardTemplate": "/path/template.json",# full path to adaptive card template file
       "useLookup": "GECOS"                          # which function from lookup package the connector uses to map cmdline userid to end-system userid
     },                                              #  available lookups ("GECOS", "none")
     "mailto": {
       "name": "original slurm mail functionality, extended.",
-      "mailCmd": "/usr/bin/mutt",
+      "mailCmd": "/usr/bin/mutt",                        # mail client to use
       "mailCmdParams": "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\"",
       "mailTemplate": "/etc/slurm/mailTemplate.tmpl",    # message body template
       "mailFormat": "HTML",                              # `HTML` or `text` (can use telegram html in templates/)
-      "allowList": ".+@(imp|imba.oeaw|gmi.oeaw).ac.at",
-      "blockList": ""                                    # unused
+      "allowList": ".+@(imp|imba.oeaw|gmi.oeaw).ac.at",  # golang re2 expression : https://github.com/google/re2/wiki/Syntax 
     },
     "telegram": {
-      "name": "telegram bot connector",
-      "url": "",
-      "token": "PasteHereTelegramBotToken",
-      "renderToFile": "no",
-      "spoolDir": "/tmp/telegramgobs",
-      "messageTemplate": "/etc/slurm/telegramTemplate.md",
-      "useLookup": "no",
-      "format": "MarkdownV2"
+      "name": "telegram bot",                       # bot uses this in hello message "Welcome to "name""
+      "url": "",                                    # unused, leave empty, might change in the future
+      "token": "PasteHereTelegramBotToken",         # token obtained when creating the bot with botfather
+      "renderToFile": "no",                         # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
+      "spoolDir": "/tmp/telegramgobs",              # where to spool
+      "messageTemplate": "/etc/slurm/telegramTemplate.md",  # template file
+      "useLookup": "no",                            # remove if not using custom lookup functions
+      "format": "MarkdownV2"                        # options: "MarkdownV2", "HTML" ,depending on the template used
     },
     "discord": {
       "name": "DiscoSlurmBot",                      # name that is used in the bot welcome message
@@ -49,10 +48,10 @@
       "path": "/tmp"                                # see above.
     }
   },
-  "qosmap": {
-    "3600": "RAPID",
-    "28800": "SHORT",
-    "172800": "MEDIUM",
-    "1209600": "LONG"
+  "qosmap": {              # map of your sites configured QoSes, with their timelimits (seconds), used for hint generation
+    "RAPID": 3600,
+    "SHORT": 28800,
+    "MEDIUM": 172800,
+    "LONG": 1209600
   }
 }

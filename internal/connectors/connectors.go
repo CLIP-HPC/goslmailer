@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"errors"
 	"log"
 
 	"github.com/CLIP-HPC/goslmailer/internal/config"
@@ -16,6 +17,10 @@ type Connectors map[string]Connector
 
 var ConMap Connectors = Connectors{}
 
+// Register is used to pre-populate the Connectors map with ["connectorName"]connectorStruct.
+// The connector structure is later populated with parameters from config file via PopulateConnecors() method, or,
+// registered connectors are deleted from it if configuration doesn't work.
+// It is called from connector init(), triggered by a blank import from goslmailer/gobler.
 func Register(conName string, conStruct Connector) error {
 
 	if _, ok := ConMap[conName]; !ok {
@@ -23,6 +28,7 @@ func Register(conName string, conStruct Connector) error {
 		ConMap[conName] = conStruct
 	} else {
 		log.Printf("Connector %s already initialized.\n", conName)
+		return errors.New("connector already initialized")
 	}
 
 	return nil

@@ -21,17 +21,23 @@ pipeline:
       - goslmailer
       - gobler -c /tmp/doesntexist.conf
       - tgslurmbot -c /tmp/doesntexist.conf
+      - matrixslurmbot -c /tmp/doesntexist.conf
+      - discoslurmbot -c /tmp/doesntexist.conf
 
   test_assert:
     action: validator:assert
     expect: 
-      - '/conf: no such file/'
-      - '/conf: no such file/'
-      - '/conf: no such file/'
+      - '/ERROR: getConfig() failed/'
+      - '/ERROR: getConfig() failed/'
+      - '/ERROR: getConfig() failed/'
+      - '/ERROR: getConfig() failed/'
+      - '/ERROR: getConfig() failed/'
     actual: 
       - $run_goslmailer.Cmd[0].Stdout
       - $run_goslmailer.Cmd[1].Stdout
       - $run_goslmailer.Cmd[2].Stdout
+      - $run_goslmailer.Cmd[3].Stdout
+      - $run_goslmailer.Cmd[4].Stdout
 
         #  debug_gosl:
         #    action: workflow:print

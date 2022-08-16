@@ -9,6 +9,9 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 type ConfigContainer struct {
@@ -16,7 +19,8 @@ type ConfigContainer struct {
 	Binpaths         map[string]string            `json:"binpaths"`
 	DefaultConnector string                       `json:"defaultconnector"`
 	Connectors       map[string]map[string]string `json:"connectors"`
-	QosMap           map[uint64]string            `json:"qosmap"`
+	QosMap           map[string]uint64            `json:"qosmap"`
+	//QosMap           map[uint64]string            `json:"qosmap"`
 }
 
 func NewConfigContainer() *ConfigContainer {
@@ -29,23 +33,38 @@ func (cc *ConfigContainer) GetConfig(name string) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(f, cc)
+
+	// if HasSuffix(".toml") -> toml.Unmarshall
+	// else json.Unmarshall
+	if strings.HasSuffix(name, ".toml") {
+		err = toml.Unmarshal(f, cc)
+	} else {
+		err = json.Unmarshal(f, cc)
+	}
+
 	if err != nil {
 		return err
 	}
+
+	cc.testNsetBinPaths()
+
+	return nil
+}
+
+func (cc *ConfigContainer) testNsetBinPaths() error {
 
 	if cc.Binpaths == nil {
 		cc.Binpaths = make(map[string]string)
 	}
 
-	// set default paths
+	// default paths
 	defaultpaths := map[string]string{
 		"sacct": "/usr/bin/sacct",
 		"sstat": "/usr/bin/sstat",
 	}
 
 	for key, path := range defaultpaths {
-		if _, exists := cc.Binpaths[key]; !exists {
+		if val, exists := cc.Binpaths[key]; !exists || val == "" {
 			cc.Binpaths[key] = path
 		}
 	}

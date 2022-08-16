@@ -1,0 +1,25 @@
+# general configuration
+logfile = "/tmp/goslmailer.log"
+defaultconnector = "msteams"
+
+[binpaths]
+sacct="/usr/bin/sacct"
+sstat="/usr/bin/sstat"
+
+[connectors]
+[connectors.msteams]
+renderToFile = "spool"
+spoolDir = "/tmp"
+useLookup = "GECOS"
+url = "https://msteams/webhook/url"
+
+[connectors.mailto]
+name = "original slurm mail functionality, extended."
+mailCmd = "/etc/slurm/mail.sh"
+mailCmdParams = "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\""
+mailTemplate = "/etc/slurm/mailTemplate.tmpl"
+allowList = ".+@(imp|imba.oeaw|gmi.oeaw).ac.at"
+blockList = ""
+
+[connectors.textfile]
+path = "/tmp"

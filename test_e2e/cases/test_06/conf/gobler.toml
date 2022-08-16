@@ -1,0 +1,60 @@
+#
+# gobler annotated configuration file
+#
+# note: configuration file syntax is the same as from goslmailer, only the differences are commented here
+#
+
+logfile = "/tmp/gobler_test06.log"
+defaultconnector = "msteams"
+
+[connectors.msteams]
+name = "gobler.conf"
+renderToFile = "no"
+spoolDir = "/tmp/msteams"
+adaptiveCardTemplate = "/etc/slurm/adaptive_card_template.json"
+url = "https://msteams/webhook/url"
+useLookup = "GECOS"
+#
+# Gobler specific configuration, set this in every connector config that supports, and is used with spooling enabled.
+#
+# monitor period, now often will `monitor` goroutine scan the spoolDir for new gobs (if "ms" is omitted, default T is in seconds)
+monitorT = "20000ms"
+#
+# picker period, now often will `picker` goroutine pick the next message to send to `sender`
+# Tune depending on the endpoint throughput capability.
+# note: sender picks up and tries to send the message immediately, so this determines how fast are the messages sent out.
+pickerT = "5000ms"
+#
+# picker-sender buffer length
+# How many undelivered messages can the `picker` send to `sender` without blocking.
+# Tune depending on the endpoint throughput capability.
+psBufLen = "3"
+#
+# number of `sender` goroutines
+# Multiple `sender`s can wait for messages from the `picker`.
+# Tune depending on the endpoint throughput capability.
+numSenders = "4"
+#
+# maximum messages per user
+# On receipt of new messages from the `monitor`, `picker` will scan the list and delete latest messages above this limit.
+# The number of deleted messages is recorded in the messagepack structure and can be referenced like this: `{{ .Job.PrunedMessageCount }}`
+# in the template to notify user that some of his messages were deleted.
+maxMsgPU = "3"
+
+[connectors.telegram]
+name = "telegram bot connector"
+url = ""
+token = "PasteHereTelegramBotToken"
+renderToFile = "yes"
+spoolDir = "/tmp"
+messageTemplate = "/tmp/telegramTemplate.html"      
+useLookup = "no"
+format = "HTML"
+monitorT = "5000ms"
+pickerT = "1000ms"
+psBufLen = "3"
+numSenders = "3"
+maxMsgPU = "1"
+
+[connectors.textfile]
+path = "/tmp"

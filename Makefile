@@ -18,12 +18,14 @@ buildCommitVar=github.com/CLIP-HPC/goslmailer/internal/version.buildCommit
 # various directories
 bindirs=$(wildcard ./cmd/*)
 installdir=build/goslmailer-$(version)
+installconfdir=$(installdir)/config
+installtempldir=$(installdir)/templates
 
 # list of files to include in build
 bins=$(notdir $(bindirs))
 readme=README.md
 templates=templates/adaptive_card_template.json templates/telegramTemplate.html templates/matrix_template.md
-config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf
+config=cmd/goslmailer/goslmailer.conf.annotated_example cmd/gobler/gobler.conf cmd/goslmailer/goslmailer.toml.annotated_example cmd/gobler/gobler.toml
 
 # can be replaced with go test ./... construct
 testdirs=$(sort $(dir $(shell find ./ -name *_test.go)))
@@ -55,8 +57,10 @@ build:
 	done;
 
 install:
-	mkdir -p $(installdir)
-	cp $(bins) $(readme) $(templates) $(config) $(installdir)
+	mkdir -p $(installdir) $(installconfdir) $(installtempldir)
+	cp $(bins) $(readme) $(installdir)
+	cp $(config) $(installconfdir)
+	cp $(templates) $(installtempldir)
 
 test_new:
 	$(foreach dir, $(testdirs), go test -v -count=1 $(dir) || exit $$?;)
@@ -65,7 +69,7 @@ test:
 	@echo "********************************************************************************"
 	@echo Testing
 	@echo "********************************************************************************"
-	go test -v -count=1 ./...
+	go test -v -cover -count=1 ./...
 
 endly_linux_$(endly_version).tar.gz:
 	curl -L -O https://github.com/viant/endly/releases/download/v$(endly_version)/endly_linux_$(endly_version).tar.gz
@@ -82,5 +86,6 @@ test_endly:
 clean:
 	rm $(bins)
 	rm -rf $(installdir)
-	rm endly_linux_$(endly_version).tar.gz
+	rm test_e2e/rendered-*
+	#rm endly_linux_$(endly_version).tar.gz
 	rm test_e2e/endly

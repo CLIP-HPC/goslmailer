@@ -11,4 +11,5 @@ discoslurmbot
 endly_linux_*.tar.gz
 test_e2e/nohup.out
 test_e2e/rendered*.json
+test_e2e/rendered*.md
 test_e2e/endly

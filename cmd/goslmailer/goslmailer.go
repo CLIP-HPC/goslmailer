@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -13,6 +11,7 @@ import (
 	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
+	"github.com/CLIP-HPC/goslmailer/internal/logger"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/slurmjob"
 	"github.com/CLIP-HPC/goslmailer/internal/version"
@@ -23,57 +22,51 @@ const goslmailer_config_file = "/etc/slurm/goslmailer.conf"
 func main() {
 
 	var (
-		ic      invocationContext
-		job     slurmjob.JobContext
-		logFile io.Writer
+		ic  invocationContext
+		job slurmjob.JobContext
 	)
 
-	// read configuration
+	// get ENV var GOSLMAILERCONF if it's set, if not, use default /etc...
 	cf, pres := os.LookupEnv("GOSLMAILER_CONF")
 	if !pres || cf == "" {
 		cf = goslmailer_config_file
 	}
+
+	// read config file
 	cfg := config.NewConfigContainer()
 	err := cfg.GetConfig(cf)
 	if err != nil {
-		fmt.Printf("getConfig failed: %s", err)
-		os.Exit(1)
+		log.Fatalf("ERROR: getConfig() failed: %s\n", err)
 	}
 
 	// setup logger
-	if cfg.Logfile != "" {
-		logFile, err = os.OpenFile(cfg.Logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			fmt.Println("ERROR: can not open configured log file. Exiting.")
-			os.Exit(1)
-		}
-	} else {
-		logFile = os.Stderr
+	l, err := logger.SetupLogger(cfg.Logfile, "goslmailer")
+	if err != nil {
+		l.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Logfile, err)
 	}
-	log := log.New(logFile, "goslmailer:", log.Lshortfile|log.Ldate|log.Lmicroseconds)
 
-	log.Println("======================== START OF RUN ==========================================")
+	l.Println("======================== START OF RUN ==========================================")
 
-	version.DumpVersion(log)
+	version.DumpVersion(l)
 
-	cfg.DumpConfig(log)
+	cfg.DumpConfig(l)
 
 	// get '-s "subject" userid' command line parameters with which we're called
 	ic.getCMDLine()
-	ic.dumpCMDLine(log)
+	ic.dumpCMDLine(l)
 
 	// parse CmdParams and generate a list of {scheme, target} receivers (e.g. [ {skype, skypeid}, {msteams, msteamsid}, ...])
-	ic.generateReceivers(cfg.DefaultConnector, log)
-	ic.dumpReceivers(log)
+	ic.generateReceivers(cfg.DefaultConnector, l)
+	ic.dumpReceivers(l)
 
 	// get SLURM_* environment variables
 	job.GetSlurmEnvVars()
 
 	// get job statistics based on the SLURM_JOB_ID from slurmEnv struct
 	// only if job is END or FAIL(?)
-	err = job.GetJobStats(ic.CmdParams.Subject, cfg.Binpaths, log)
+	err = job.GetJobStats(ic.CmdParams.Subject, cfg.Binpaths, l)
 	if err != nil {
-		log.Fatalf("Unable to retrieve job stats. Error: %v", err)
+		l.Fatalf("Unable to retrieve job stats. Error: %v", err)
 	}
 
 	// generate hints based on SlurmEnv and JobStats (e.g. "too much memory requested" or "walltime << requested queue")
@@ -81,30 +74,29 @@ func main() {
 	job.GenerateHints(cfg.QosMap)
 
 	// populate map with configured referenced connectors
-	//conns.PopulateConnectors(cfg, log)
-	connectors.ConMap.PopulateConnectors(cfg, log)
+	connectors.ConMap.PopulateConnectors(cfg, l)
 
 	// Iterate over 'Receivers' map and for each call the connector.SendMessage() (if the receiver scheme is configured in conf file AND has an object in connectors map)
 	if ic.Receivers == nil {
-		log.Fatalln("No receivers defined. Aborting!")
+		l.Fatalln("No receivers defined. Aborting!")
 	}
 	// here we loop through requested receivers and invoke SendMessage()
 	for _, v := range ic.Receivers {
 		mp, err := message.NewMsgPack(v.scheme, v.target, &job)
 		if err != nil {
-			log.Printf("ERROR in message.NewMsgPack(%s): %q\n", v.scheme, err)
+			l.Printf("ERROR in message.NewMsgPack(%s): %q\n", v.scheme, err)
 		}
 		con, ok := connectors.ConMap[v.scheme]
 		if !ok {
-			log.Printf("%s connector is not initialized for target %s. Ignoring.\n", v.scheme, v.target)
+			l.Printf("%s connector is not initialized for target %s. Ignoring.\n", v.scheme, v.target)
 		} else {
 			// useSpool == true when called from here, for connectors that use this capability
-			err := con.SendMessage(mp, true, log)
+			err := con.SendMessage(mp, true, l)
 			if err != nil {
-				log.Printf("ERROR in %s.SendMessage(): %q\n", v.scheme, err)
+				l.Printf("ERROR in %s.SendMessage(): %q\n", v.scheme, err)
 			}
 		}
 	}
 
-	log.Println("========================== END OF RUN ==========================================")
+	l.Println("========================== END OF RUN ==========================================")
 }

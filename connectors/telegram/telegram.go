@@ -56,14 +56,6 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	// debug purposes
 	c.dumpConnector(l)
 
-	// spin up new bot
-	tb, err := telebot.NewBot(telebot.Settings{
-		Token: c.token,
-	})
-	if err != nil {
-		l.Fatal(err)
-	}
-
 	// lookup the end-system userid from the one sent by slurm (if lookup is set in "useLookup" config param)
 	enduser, err := lookup.ExtLookupUser(mp.TargetUser, c.useLookup, l)
 	if err != nil {
@@ -78,12 +70,6 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	cID, err := strconv.ParseInt(enduser, 10, 64)
 	if err != nil {
 		l.Printf("cID strconv failed %s", err)
-		return err
-	}
-
-	chat, err := tb.ChatByID(cID)
-	if err != nil {
-		l.Printf("chatbyusername failed %s", err)
 		return err
 	}
 
@@ -125,6 +111,22 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 			}
 		}
 	default:
+		// spin up new bot
+		tb, err := telebot.NewBot(telebot.Settings{
+			Token: c.token,
+		})
+		if err != nil {
+			//l.Fatal(err)
+			l.Println(err)
+			return err
+		}
+		// get chatid
+		chat, err := tb.ChatByID(cID)
+		if err != nil {
+			l.Printf("chatbyusername failed %s", err)
+			return err
+		}
+		// send message
 		//https://core.telegram.org/bots/api#formatting-options
 		msg, err := tb.Send(chat, buffer.String(), c.format)
 		if err != nil {

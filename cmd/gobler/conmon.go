@@ -117,7 +117,7 @@ func NewConMon(con string, conCfg map[string]string, l *log.Logger) (*conMon, er
 }
 
 // SpinUp start 3 goroutines: monitor, picker and sender for a connector (each that has "spoolDir" attribute in .conf)
-func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *log.Logger) error {
+func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, l *log.Logger) error {
 
 	mpChan := make(chan *spool.SpooledGobs, 1)
 	psChan := make(chan psGob, cm.pickSendBufLen)
@@ -125,30 +125,30 @@ func (cm *conMon) SpinUp(conns connectors.Connectors, wg *sync.WaitGroup, log *l
 
 	mon, err := NewMonitor(cm.conn, cm.spoolDir, cm.monitorT)
 	if err != nil {
-		log.Printf("Monitor %s inst FAILED\n", cm.conn)
+		l.Printf("Monitor %s inst FAILED\n", cm.conn)
 	} else {
-		log.Printf("Monitor %s startup...\n", cm.conn)
+		l.Printf("Monitor %s startup...\n", cm.conn)
 		wg.Add(1)
-		go mon.MonitorWorker(mpChan, wg, log)
+		go mon.MonitorWorker(mpChan, wg, l)
 	}
 
 	pickr, err := NewPicker(cm.conn, cm.spoolDir, cm.pickerT, cm.maxMsgPU)
 	if err != nil {
-		log.Printf("Picker %s inst FAILED\n", cm.conn)
+		l.Printf("Picker %s inst FAILED\n", cm.conn)
 	} else {
-		log.Printf("Picker %s startup...\n", cm.conn)
+		l.Printf("Picker %s startup...\n", cm.conn)
 		wg.Add(1)
-		go pickr.PickerWorker(mpChan, psChan, psChanFailed, wg, log)
+		go pickr.PickerWorker(mpChan, psChan, psChanFailed, wg, l)
 	}
 
 	for i := 1; i <= cm.numSenders; i++ {
 		sendr, err := NewSender(cm.conn, cm.spoolDir, &conns, i)
 		if err != nil {
-			log.Printf("Sender %d - %s inst failed\n", i, cm.conn)
+			l.Printf("Sender %d - %s inst failed\n", i, cm.conn)
 		} else {
-			log.Printf("Sender %d - %s startup...\n", i, cm.conn)
+			l.Printf("Sender %d - %s startup...\n", i, cm.conn)
 			wg.Add(1)
-			go sendr.SenderWorker(psChan, psChanFailed, wg, log)
+			go sendr.SenderWorker(psChan, psChanFailed, wg, l)
 		}
 	}
 

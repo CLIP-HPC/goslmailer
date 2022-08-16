@@ -11,25 +11,58 @@ import (
 	"time"
 )
 
+type qosMapQL map[string]uint64 // qosMap[QoS]Limit
+type qosMapLQ map[uint64]string // qosMap[Limit]QoS
+
+// makeQoSReversed reverses qosMap from config map[string]uint64 to map[uint64]string format.
+func makeQoSReversed(ql qosMapQL) qosMapLQ {
+
+	lq := make(map[uint64]string)
+
+	for k, v := range ql {
+		lq[v] = k
+	}
+
+	return lq
+}
+
 // TODO make it configureable or read it from sacctmgr
 
-func calculateOptimalQOS(qosMap map[uint64]string, runtime uint64) string {
-	keys := make([]uint64, len(qosMap))
-	for k := range qosMap {
-		keys = append(keys, k)
+func calculateOptimalQOS(qosMap qosMapQL, runtime uint64) string {
+
+	// make a slice of structs used to sort the map
+	keys := make([]struct {
+		qos string // qos name
+		lim uint64 // time limit
+	}, len(qosMap))
+
+	// put everything inside
+	for k, v := range qosMap {
+		keys = append(keys, struct {
+			qos string
+			lim uint64
+		}{qos: k, lim: v})
 	}
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	// sort it
+	sort.Slice(keys, func(i, j int) bool { return keys[i].lim < keys[j].lim })
+
+	// find fitting qos for the job
 	for _, k := range keys {
-		if runtime <= k {
-			return qosMap[k]
+		if runtime <= k.lim {
+			return k.qos
 		}
 	}
+
+	// here, we're basically in undefined area? no qosmap was passed, what now?
 	return "LONG"
+	// or
+	//return keys[len(keys)-1].qos
 }
 
 // Populate JobContext.Hints with hints about the job (mis)usage and suggestions how to optimize it.
 //	todo: add more logic once more stats are in
-func (j *JobContext) GenerateHints(qosMap map[uint64]string) {
+func (j *JobContext) GenerateHints(qosMap qosMapQL) {
 	if j.IsJobFinished() {
 		// Check OUT_OF_MEMORY
 		if j.SlurmEnvironment.SLURM_JOB_STATE == "OUT_OF_MEMORY" {
@@ -56,7 +89,11 @@ func (j *JobContext) GenerateHints(qosMap map[uint64]string) {
 
 			// Check if it was submitted without specifying a walltime (just against default maxwalltime of QOS)
 			optimalQos := calculateOptimalQOS(qosMap, j.JobStats.Runtime)
-			if qos, ok := qosMap[j.JobStats.Walltime]; ok {
+
+			// reverse the map to LimitQos format map[uint64]string to be used onwards without too many modifications to code...
+			lqMap := makeQoSReversed(qosMap)
+			//if qos, ok := qosMap[j.JobStats.Walltime]; ok { // original
+			if qos, ok := lqMap[j.JobStats.Walltime]; ok { // new
 				if qos != optimalQos {
 					j.Hints = append(j.Hints, fmt.Sprintf("TIP: Your job was submitted to %s QOS and finished within half of the requested walltime. Consider submitting it to the %s QOS instead", qos, optimalQos))
 				} else {

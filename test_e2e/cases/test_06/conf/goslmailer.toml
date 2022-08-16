@@ -1,0 +1,69 @@
+#
+# Annotated goslmailer configuration file
+#
+
+# if specified; append logs to this file; else; dump to stderr
+logfile = ""
+
+# default connector to be used for message delivery for receivers without full 'connector:user' specification
+defaultconnector = "msteams"
+
+# paths to slurm binaries (optional, will default to these if not specified)
+[binpaths]
+sacct = "/tmp/sacct"
+sstat = "/tmp/sstat"
+
+# map of connector configurations, remove any connectors that you don't wish to expose to the users
+[connectors]
+
+# each connector has it's own map of config attributes:
+[connectors.msteams]
+name = "dev channel"                              # unused
+renderToFile = "yes"                              # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
+spoolDir = "/tmp"                                 # dir to use for spooling, remove if spooling not used
+url = "https://msteams/webhook/url"               # ms teams webhook url
+adaptiveCardTemplate = "/path/template.json"      # full path to adaptive card template file
+useLookup = "GECOS"                               # which function from lookup package the connector uses to map cmdline userid to end-system userid
+                                                  #  available lookups ("GECOS", "none")
+
+[connectors.mailto]
+name = "original mail functionality, extended."   # unused
+mailCmd = "/usr/bin/mutt"                         # mail client to use
+# mailCmdParams: templateable command line to be passed to mailCmd
+mailCmdParams = "-s \"Job {{ .SlurmEnvironment.SLURM_JOB_ID }} ({{ .SlurmEnvironment.SLURM_JOB_NAME }}) {{ .SlurmEnvironment.SLURM_JOB_MAIL_TYPE }}\""
+mailTemplate = "/etc/slurm/mailTemplate.tmpl"     # message body template
+mailFormat = "HTML"                               # `HTML` or `text` (can use telegram html in templates/)
+allowList = ".+@(imp|imba.oeaw|gmi.oeaw).ac.at"   # golang re2 expression : https://github.com/google/re2/wiki/Syntax 
+    
+[connectors.telegram]
+name = "telegram bot"                               # bot uses this in hello message "Welcome to "name""
+url = ""                                            # unused, leave empty, might change in the future
+token = "PasteHereTelegramBotToken"                 # token obtained when creating the bot with botfather
+renderToFile = "spool"                              # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
+spoolDir = "/tmp"                                   # where to spool
+messageTemplate = "/tmp/telegramTemplate.html"      # template file
+useLookup = "no"                                    # remove if not using custom lookup functions
+format = "HTML"                                     # options: "MarkdownV2", "HTML" ,depending on the template used
+
+[connectors.discord]
+name = "DiscoSlurmBot"                              # name that is used in the bot welcome message
+triggerString = "showmeslurm"                       # string (in channel or DM) that triggers the bot to respond with an instructional DM to the user
+token = "PasteBotTokenHere"                         # place to put the bot token
+messageTemplate = "/path/to/template.md"            # template file to use
+
+[connectors.matrix]
+username = "@myuser:matrix.org"
+token = "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93"
+homeserver = "matrix.org"
+template = "/path/to/matrix_template.md"
+
+# fictitious "textfile" connector, package code for it doesn't exist, implementation left as the exercise for the reader
+[connectors.textfile]
+path = "/tmp"
+
+# map of your sites configured QoSes, with their timelimits (seconds), used for hint generation
+[qosmap]
+RAPID = 3600
+SHORT = 28800
+MEDIUM = 172800
+LONG = 1209600
