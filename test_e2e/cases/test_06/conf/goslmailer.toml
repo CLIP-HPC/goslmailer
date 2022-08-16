@@ -10,8 +10,8 @@ defaultconnector = "msteams"
 
 # paths to slurm binaries (optional, will default to these if not specified)
 [binpaths]
-sacct = "/usr/bin/sacct"
-sstat = "/usr/bin/sstat"
+sacct = "/tmp/sacct"
+sstat = "/tmp/sstat"
 
 # map of connector configurations, remove any connectors that you don't wish to expose to the users
 [connectors]

@@ -7,10 +7,6 @@
 logfile = "/tmp/gobler_test06.log"
 defaultconnector = "msteams"
 
-[binpaths]
-sacct="/usr/bin/sacct"
-sstat="/usr/bin/sstat"
-
 [connectors.msteams]
 name = "gobler.conf"
 renderToFile = "no"

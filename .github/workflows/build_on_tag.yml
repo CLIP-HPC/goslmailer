@@ -1,0 +1,53 @@
+name: Build_on_tag
+
+on:
+  push:
+    tags:
+      - v**
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Prepare SSH for endly
+      run: |
+        mkdir ~/.secret
+        mkdir ~/.ssh
+        touch ~/.ssh/authorized_keys
+        chmod 600 ~/.ssh/authorized_keys
+        ssh-keygen -b 1024 -t rsa -f id_rsa -P "" -f ~/.secret/id_rsa
+        cat ~/.secret/id_rsa.pub >>  ~/.ssh/authorized_keys 
+        cat >>~/.ssh/config <<END
+        Host localhost
+          IdentityFile ~/.secret/id.rsa
+          StrictHostKeyChecking no
+        END
+
+    - name: Test
+      run: make test
+
+    - name: Build
+      run: make build -e version=${{ github.ref_name }}
+
+    - name: Get Endly
+      run: make get_endly
+
+    - name: Run E2E tests
+      run: make test_endly
+
+    - name: Install
+      run: make install -e version=${{ github.ref_name }}
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: goslmailer-${{ github.ref_name }}
+        path: build/goslmailer-${{ github.ref_name }}/

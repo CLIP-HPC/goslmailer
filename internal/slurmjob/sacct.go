@@ -10,6 +10,47 @@ import (
 	"strings"
 )
 
+// sacct format parameter with the constants to ease referencing splits
+const SACCTformatLine = "JobName,User,Account,Partition,NodeList,ncpus,State,Submit,start,end,timelimit,elapsed,CPUTime,TotalCPU,UserCPU,SystemCPU,ReqMem,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode,Comment"
+const (
+	SACCTJobName = iota
+	SACCTUser
+	SACCTAccount
+	SACCTPartition
+	SACCTNodeList
+	SACCTncpus
+	SACCTState
+	SACCTSubmit
+	SACCTstart
+	SACCTend
+	SACCTtimelimit
+	SACCTelapsed
+	SACCTCPUTime
+	SACCTTotalCPU
+	SACCTUserCPU
+	SACCTSystemCPU
+	SACCTReqMem
+	SACCTMaxRSS
+	SACCTMaxDiskWrite
+	SACCTMaxDiskRead
+	SACCTMaxRSSNode
+	SACCTMaxDiskWriteNode
+	SACCTMaxDiskReadNode
+	SACCTComment
+)
+
+// sstat format parameter with the constants to ease referencing splits
+const SSTATformatLine = "JobID,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode"
+const (
+	SSTATJobID = iota
+	SSTATMaxRSS
+	SSTATMaxDiskWrite
+	SSTATMaxDiskRead
+	SSTATMaxRSSNode
+	SSTATMaxDiskWriteNode
+	SSTATMaxDiskReadNode
+)
+
 func parseTime(input string) (float64, uint64, uint64, uint64) {
 	reg := `^(((?P<days>\d+)-)?(?P<hours>\d\d):)?(?P<minutes>\d\d):(?P<seconds>\d\d(\.\d+)?)$`
 	r := regexp.MustCompile(reg)
@@ -55,19 +96,19 @@ func ParseSstatMetrics(input []byte) (*SstatMetrics, error) {
 		}
 		split := strings.Split(line, "|")
 		if split[0] != "" {
-			maxRSS := parseByteSize(split[1])
+			maxRSS := parseByteSize(split[SSTATMaxRSS])
 			if metrics.MaxRSS < maxRSS {
 				metrics.MaxRSS = maxRSS
 			}
 		}
 		if split[1] != "" {
-			maxDiskWrite := parseByteSize(split[2])
+			maxDiskWrite := parseByteSize(split[SSTATMaxDiskWrite])
 			if metrics.MaxDiskWrite < maxDiskWrite {
 				metrics.MaxDiskWrite = maxDiskWrite
 			}
 		}
 		if split[2] != "" {
-			maxDiskRead := parseByteSize(split[3])
+			maxDiskRead := parseByteSize(split[SSTATMaxDiskRead])
 			if metrics.MaxDiskRead < maxDiskRead {
 				metrics.MaxDiskRead = maxDiskRead
 			}
@@ -88,24 +129,24 @@ func ParseSacctMetrics(input []byte, l *log.Logger) (*SacctMetrics, error) {
 			continue
 		}
 		split := strings.Split(line, "|")
-		ncpus, _ := strconv.ParseInt(strings.TrimSpace(split[5]), 10, 16)
+		ncpus, _ := strconv.ParseInt(strings.TrimSpace(split[SACCTncpus]), 10, 16)
 		if metrics.Ncpus < ncpus {
 			metrics.Ncpus = ncpus
 		}
 		if split[17] != "" {
-			maxRSS := parseByteSize(split[17])
+			maxRSS := parseByteSize(split[SACCTMaxRSS])
 			if metrics.MaxRSS < maxRSS {
 				metrics.MaxRSS = maxRSS
 			}
 		}
 		if split[18] != "" {
-			maxDiskWrite := parseByteSize(split[18])
+			maxDiskWrite := parseByteSize(split[SACCTMaxDiskWrite])
 			if metrics.MaxDiskWrite < maxDiskWrite {
 				metrics.MaxDiskWrite = maxDiskWrite
 			}
 		}
 		if split[19] != "" {
-			maxDiskRead := parseByteSize(split[19])
+			maxDiskRead := parseByteSize(split[SACCTMaxDiskRead])
 			if metrics.MaxDiskRead < maxDiskRead {
 				metrics.MaxDiskRead = maxDiskRead
 			}
@@ -115,33 +156,33 @@ func ParseSacctMetrics(input []byte, l *log.Logger) (*SacctMetrics, error) {
 	// retrieve information for entire job allocation (NodeList, ReqMem)
 	allocation := lines[0]
 	split := strings.Split(allocation, "|")
-	metrics.JobName = split[0]
-	metrics.User = split[1]
-	metrics.Account = split[2]
-	metrics.Partition = split[3]
-	metrics.NodeList = split[4]
-	metrics.State = split[6]
-	cpuTimeStr := split[12]
+	metrics.JobName = split[SACCTJobName]
+	metrics.User = split[SACCTUser]
+	metrics.Account = split[SACCTAccount]
+	metrics.Partition = split[SACCTPartition]
+	metrics.NodeList = split[SACCTNodeList]
+	metrics.State = split[SACCTState]
+	cpuTimeStr := split[SACCTCPUTime]
 	cpuTime := parseCpuTime(cpuTimeStr)
 	if metrics.CPUTime < cpuTime {
 		metrics.CPUTime = cpuTime
 		metrics.CPUTimeStr = cpuTimeStr
 	}
-	totalCpuTimeStr := split[13]
+	totalCpuTimeStr := split[SACCTTotalCPU]
 	totalCpuTime := parseCpuTime(totalCpuTimeStr)
 	if metrics.TotalCPU < totalCpuTime {
 		metrics.TotalCPU = totalCpuTime
 		metrics.TotalCPUStr = totalCpuTimeStr
 	}
-	userCpuTime := parseCpuTime(split[14])
+	userCpuTime := parseCpuTime(split[SACCTUserCPU])
 	if metrics.UserCPU < userCpuTime {
 		metrics.UserCPU = userCpuTime
 	}
-	systemCpuTime := parseCpuTime(split[15])
+	systemCpuTime := parseCpuTime(split[SACCTSystemCPU])
 	if metrics.SystemCPU < systemCpuTime {
 		metrics.SystemCPU = systemCpuTime
 	}
-	metrics.Nodes = len(strings.Split(split[4], ","))
+	metrics.Nodes = len(strings.Split(split[SACCTNodeList], ","))
 	reqMem := strings.TrimSpace(split[16])
 	if strings.HasSuffix(reqMem, "n") {
 		metrics.ReqMem = uint64(metrics.Nodes) * parseByteSize(reqMem[:len(reqMem)-1])
@@ -151,13 +192,13 @@ func ParseSacctMetrics(input []byte, l *log.Logger) (*SacctMetrics, error) {
 	} else {
 		metrics.ReqMem = parseByteSize(reqMem)
 	}
-	metrics.Submittime = split[7]
-	metrics.Starttime = split[8]
-	metrics.Endtime = split[9]
-	metrics.WalltimeStr = split[10]
-	metrics.Walltime = uint64(parseCpuTime(split[10]))
-	metrics.RuntimeStr = split[11]
-	metrics.Runtime = uint64(parseCpuTime(split[11]))
+	metrics.Submittime = split[SACCTSubmit]
+	metrics.Starttime = split[SACCTstart]
+	metrics.Endtime = split[SACCTend]
+	metrics.WalltimeStr = split[SACCTtimelimit]
+	metrics.Walltime = uint64(parseCpuTime(split[SACCTtimelimit]))
+	metrics.RuntimeStr = split[SACCTelapsed]
+	metrics.Runtime = uint64(parseCpuTime(split[SACCTelapsed]))
 
 	l.Printf("Metrics: %#v", metrics)
 	return &metrics, nil
@@ -185,8 +226,13 @@ func GetSacctMetrics(jobId string, paths map[string]string, l *log.Logger) (*Sac
 	return ParseSacctMetrics(sacctMetrics, l)
 }
 
+// this changed in:
+// f5de480 Add support for SLURM < 21.08.x and improve error handling
+// to call GetSacctData() instead of GetSstatData() !?
 func GetSstatMetrics(jobId string, paths map[string]string, l *log.Logger) (*SstatMetrics, error) {
-	sstatMetrics, err := GetSacctData(jobId, paths, l)
+
+	//sstatMetrics, err := GetSacctData(jobId, paths, l)
+	sstatMetrics, err := GetSstatData(jobId, paths, l)
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +257,8 @@ func updateJobStatsWithLiveData(metrics *SacctMetrics, jobId string, paths map[s
 
 // Execute the saccct command and return its output
 func GetSacctData(jobId string, paths map[string]string, l *log.Logger) ([]byte, error) {
-	formatLine := "JobName,User,Account,Partition,NodeList,ncpus,State,Submit,start,end,timelimit,elapsed,CPUTime,TotalCPU,UserCPU,SystemCPU,ReqMem,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode,Comment"
-	cmd := exec.Command(paths["sacct"], "-j", jobId, "-n", "-p", "--format", formatLine)
+
+	cmd := exec.Command(paths["sacct"], "-j", jobId, "-n", "-p", "--format", SACCTformatLine)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sacct command: %w", err)
@@ -220,9 +266,10 @@ func GetSacctData(jobId string, paths map[string]string, l *log.Logger) ([]byte,
 	return output, nil
 }
 
+// todo: see GetSstatMetrics() above?
 func GetSstatData(jobId string, paths map[string]string, l *log.Logger) ([]byte, error) {
-	formatLine := "JobID,MaxRSS,MaxDiskWrite,MaxDiskRead,MaxRSSNode,MaxDiskWriteNode,MaxDiskReadNode"
-	cmd := exec.Command(paths["sstat"], "-a", "-j", jobId, "-n", "-p", "--format", formatLine)
+
+	cmd := exec.Command(paths["sstat"], "-a", "-j", jobId, "-n", "-p", "--format", SSTATformatLine)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sstat command: %w", err)

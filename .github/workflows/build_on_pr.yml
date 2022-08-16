@@ -1,9 +1,6 @@
 name: Build_on_tag
 
 on:
-  push:
-    tags:
-      - v**
   pull_request:
     branches:
       - main
@@ -27,7 +24,7 @@ jobs:
         touch ~/.ssh/authorized_keys
         chmod 600 ~/.ssh/authorized_keys
         ssh-keygen -b 1024 -t rsa -f id_rsa -P "" -f ~/.secret/id_rsa
-        cat ~/.secret/id_rsa.pub >>  ~/.ssh/authorized_keys 
+        cat ~/.secret/id_rsa.pub >>  ~/.ssh/authorized_keys
         cat >>~/.ssh/config <<END
         Host localhost
           IdentityFile ~/.secret/id.rsa
@@ -38,7 +35,7 @@ jobs:
       run: make test
 
     - name: Build
-      run: make build -e version=${{ github.ref_name }}
+      run: make build -e version=${{ github.sha }}
 
     - name: Get Endly
       run: make get_endly
@@ -47,10 +44,10 @@ jobs:
       run: make test_endly
 
     - name: Install
-      run: make install -e version=${{ github.ref_name }}
+      run: make install -e version=${{ github.sha }}
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1
       with:
         name: goslmailer-${{ github.ref_name }}
-        path: build/goslmailer-${{ github.ref_name }}/
+        path: build/goslmailer-${{ github.sha }}/
