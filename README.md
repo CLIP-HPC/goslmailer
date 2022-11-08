@@ -2,6 +2,14 @@
 
 > **News & Info**
 >
+> v2.7.0
+>
+> * [slack connector](#slack-connector)
+> * [mattermost connector](#mattermost-connector)
+>   * [mattermost section in json sample config](./cmd/goslmailer/goslmailer.conf.annotated_example)
+>   * [mattermost section in toml sample config](./cmd/goslmailer/goslmailer.toml.annotated_example)
+>   * [mattermost bot sample config](./cmd/mattermostbot/mattermost.conf)
+>
 > v2.5.0
 >
 > New: In addition to json, now supports [TOML](https://toml.io/en/) configuration files (.toml file suffix)
@@ -25,15 +33,6 @@
 >  }
 > ```
 >
-> v2.4.0 
->
-> * discord connector
-> * new connectors initialization code
->
-> Older: 
-> * support for SLURM version < 21.08
->   * For templating differences between slurm>21.08 and slurm<21.08 see [templating guide](./templates/README.md)
->
 
 ## Drop-in notification delivery solution for slurm that can do:
 
@@ -44,6 +43,7 @@
   * [**msteams**](https://teams.com)
   * [**slack**](https://slack.com)
   * [**e-mail**](https://en.wikipedia.org/wiki/Email)
+  * [**mattermost**](https://mattermost.com/)
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
 * **templateable** messages ([readme](./templates/README.md))
@@ -81,10 +81,11 @@ To support future additional receiver schemes, a [connector package](connectors/
 * [**mailto**](#mailto-connector) `--mail-user=mailto:<email-addr>`
 * [**msteams**](#msteams-connector) webhook `--mail-user=msteams:<userId>`
 * [**slack**](#slack-connector) web API `--mail-user=slack:user:<userId>` OR `--mail-user=slack:channel:<channelId>`
+* [**mattermost**](#mattermost-connector) --mail-user=`mattermost`:channelId
 
 See each connector details below...
 
-### If you would like to contribute to this project by developing a new connector, [here](./connectors/connectorX/README.md) is a heavily annotated connector boilerplate (fully functional) to help you get started.
+### If you would like to contribute to this project by developing a new connector, [here](./connectors/connectorX/README.md) you can find a heavily annotated connector boilerplate (fully functional) to help you get started.
 
 ---
 
@@ -212,6 +213,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 
 | connector | spooling/throttling capable (gobler) |
 |-----------|---------------------------|
+| mattermost| yes                       |
 | discord   | yes                       |
 | matrix    | no                        |
 | telegram  | yes                       |
@@ -256,13 +258,19 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ### mattermost connector
 
-TODO
+Prerequisites for the mattermost connector:
+
+1. Create mattermost bot, [instructions here.](https://developers.mattermost.com/integrate/reference/bot-accounts/)
+2. OPTIONAL/CONVENIENT: Start the bot daemon service **mattermostbot** ([example config file](./cmd/mattermostbot/mattermost.conf)).
+    * This is used to deliver `--mail-user=mattermost:chatId` messages, can also be looked up by the user in the Info window
+3. If the bot is running, it will wake up on the configured `triggerString` and send the user a private message with slurm job submission instructions
+4. Put `mattermost` block in [goslmailer.conf](./cmd/goslmailer/goslmailer.conf.annotated_example) (and optionally [gobler.conf](./cmd/gobler/gobler.conf) if spooling is used)
 
 ![Mattermost card](./images/mattermost.png)
 
-* (Mattermost bot creations instructions)[https://developers.mattermost.com/integrate/reference/bot-accounts/]
-* (mattermost api)[https://api.mattermost.com/]
-* (message markdown)[https://docs.mattermost.com/channels/format-messages.html#:~:text=Use%20Markdown,%2C%20tables%2C%20and%20math%20formulas.]
+Additional helpful sources:
+
+* [message markdown](https://docs.mattermost.com/channels/format-messages.html#:~:text=Use%20Markdown,%2C%20tables%2C%20and%20math%20formulas.)
 
 ---
 
