@@ -254,6 +254,15 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
+### mattermost connector
+
+TODO
+
+* (Mattermost bot creations instructions)[https://developers.mattermost.com/integrate/reference/bot-accounts/]
+* (mattermost api)[https://api.mattermost.com/]
+
+---
+
 ### discord connector
 
 Prerequisites for the discord connector:
