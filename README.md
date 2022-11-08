@@ -258,6 +258,8 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 TODO
 
+![Mattermost card](./images/mattermost.png)
+
 * (Mattermost bot creations instructions)[https://developers.mattermost.com/integrate/reference/bot-accounts/]
 * (mattermost api)[https://api.mattermost.com/]
 * (message markdown)[https://docs.mattermost.com/channels/format-messages.html#:~:text=Use%20Markdown,%2C%20tables%2C%20and%20math%20formulas.]
