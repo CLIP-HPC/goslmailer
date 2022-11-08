@@ -7,6 +7,7 @@ import (
 	_ "github.com/CLIP-HPC/goslmailer/connectors/discord"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/mailto"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/mattermost"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/slack"

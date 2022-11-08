@@ -72,7 +72,7 @@ func main() {
 
 	l.Printf("Starting: %q\n", cfg.Connectors[app]["name"])
 
-	client := model.NewAPIv4Client(cfg.Connectors[app]["serverurl"])
+	client := model.NewAPIv4Client(cfg.Connectors[app]["serverUrl"])
 	client.SetOAuthToken(cfg.Connectors[app]["token"])
 	l.Printf("\nclient: %#v\n", client)
 
@@ -82,11 +82,11 @@ func main() {
 
 	// Main loop
 	for {
-		webSocketClient, err := model.NewWebSocketClient4(cfg.Connectors[app]["wsurl"], client.AuthToken)
+		webSocketClient, err := model.NewWebSocketClient4(cfg.Connectors[app]["wsUrl"], client.AuthToken)
 		if err != nil {
 			l.Fatalf("ERROR: NewWebSocketClient(): %s\n", err)
 		}
-		l.Printf("Connected to WS: %s\n", cfg.Connectors[app]["wsurl"])
+		l.Printf("Connected to WS: %s\n", cfg.Connectors[app]["wsUrl"])
 		l.Printf("Websocketclient: %#v\n\n", webSocketClient)
 		webSocketClient.Listen()
 
@@ -111,8 +111,8 @@ func main() {
 					// Post something back!
 					resPost := model.Post{}
 					resPost.ChannelId = post.ChannelId
-					resPost.Message = fmt.Sprintf("Hello!\nI'm %s!\nTo receive your job results here, use the following switch in your job scripts:\n--mail-user=mm:%s\n", cfg.Connectors[app]["name"], resPost.ChannelId)
-					if _, r := client.CreatePost(&resPost); r.Error != nil {
+					resPost.Message = fmt.Sprintf("Hello!\nI'm %s!\nTo receive your job results here, use the following switch in your job scripts:\n--mail-user=mattermost:%s\n", cfg.Connectors[app]["name"], resPost.ChannelId)
+					if _, r := client.CreatePost(&resPost); r.Error == nil {
 						l.Printf("Post response to chan: %s successfull!\n", resPost.ChannelId)
 					} else {
 						l.Printf("Post response FAILED!\n")
