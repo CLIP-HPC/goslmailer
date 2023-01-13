@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/BurntSushi/toml v1.2.0
 	github.com/bwmarrin/discordgo v0.25.0
+  github.com/slack-go/slack v0.11.4
 	github.com/dustin/go-humanize v1.0.0
 	gopkg.in/telebot.v3 v3.0.0
 	maunium.net/go/mautrix v0.11.0
