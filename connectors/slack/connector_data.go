@@ -5,15 +5,14 @@ import "log"
 const connectorName = "slack"
 
 type Connector struct {
-	name            string   // optional
-	allowedChannels string   // list of comma-seperated (no spaces) allowed channel IDs (ex: "C04B9GLV9MZ,C04B9GNTAKD,C04BC3UB42G")
-	token           string   // slack api token of the bot
-	messageTemplate string   // path to template file
+	name            string // optional
+	allowedChannels string // list of comma-seperated (no spaces) allowed channel IDs (ex: "C04B9GLV9MZ,C04B9GNTAKD,C04BC3UB42G")
+	token           string // slack api token of the bot
+	messageTemplate string // path to template file
 
-	renderToFile    string   // renderToFile can be: "yes", "no", "spool"
-	// TODO: implement "auto" (spool if rate-limited/other error)
-	spoolDir        string   // where to place spooled messages
-	useLookup       string   // string passed to lookup.ExtLookupUser() which determines which lookup function to call
+	renderToFile string // renderToFile can be: "yes", "no", "spool"
+	spoolDir     string // where to place spooled messages
+	useLookup    string // string passed to lookup.ExtLookupUser() which determines which lookup function to call
 }
 
 func (c *Connector) dumpConnector(l *log.Logger) {

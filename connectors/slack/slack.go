@@ -136,8 +136,6 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 			}
 		}
 	default:
-		// TODO: dump to spool if failed
-		// IF our attempt to send failed, we could set the dts (DumpToSpool) bool to trigger spooling after all
 		l.Printf("Sending to channelID: %s\n", enduser)
 
 		// Replaces double asterisks with asterisks to work with Slack's markdown
@@ -148,8 +146,8 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		options := slack.MsgOptionBlocks(sectionBlock)
 		a, b, c, err := api.SendMessage(enduser, options)
 		if err != nil {
-			l.Fatal(err);
-			return nil
+			l.Println(err);
+			dts = true
 		}
 		l.Print(a, " ", b, " ", c)
 	}
