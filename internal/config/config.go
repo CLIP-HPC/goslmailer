@@ -76,6 +76,5 @@ func (cc *ConfigContainer) DumpConfig(l *log.Logger) {
 	l.Println("DUMP CONFIG:")
 	l.Printf("CONFIGURATION: %#v\n", cc)
 	l.Printf("CONFIGURATION logfile: %s\n", cc.Logfile)
-	l.Printf("CONFIGURATION msteams.name: %s\n", cc.Connectors["msteams"]["name"])
 	l.Println("--------------------------------------------------------------------------------")
 }

@@ -50,7 +50,7 @@ func main() {
 
 	version.DumpVersion(l)
 
-	cfg.DumpConfig(l)
+	// cfg.DumpConfig(l)
 
 	// get '-s "subject" userid' command line parameters with which we're called
 	ic.getCMDLine()

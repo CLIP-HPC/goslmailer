@@ -58,7 +58,7 @@ func main() {
 
 	version.DumpVersion(l)
 
-	cfg.DumpConfig(l)
+	// cfg.DumpConfig(l)
 
 	// populate map with configured referenced connectors
 	err = connectors.ConMap.PopulateConnectors(cfg, l)
