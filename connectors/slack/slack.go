@@ -101,7 +101,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	if c.renderToFile != "spool" {
 		// buffer to place rendered json in
 		buffer = bytes.Buffer{}
-		err := renderer.RenderTemplate(c.messageTemplate, "AVADFArasak4KFJA", mp.JobContext, enduser, &buffer)
+		err := renderer.RenderTemplate(c.messageTemplate, "", mp.JobContext, enduser, &buffer)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,6 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	case "spool":
 		// deposit GOB to spoolDir if allowed (can be: YES from goslmailer, NO from gobler, since it's already spooled)
 		if useSpool {
-			l.Printf("Spooling %s", mp.JobContext.SLURM_JOBID)
 			l.Printf(c.spoolDir)
 			err := spool.DepositToSpool(c.spoolDir, mp)
 			if err != nil {
@@ -144,16 +143,14 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		mdBlock := slack.NewTextBlockObject("mrkdwn", markdown, false, false)
 		sectionBlock := slack.NewSectionBlock(mdBlock, nil, nil)
 		options := slack.MsgOptionBlocks(sectionBlock)
-		a, b, c, err := api.SendMessage(enduser, options)
+		_, _, _, err := api.SendMessage(enduser, options)
 		if err != nil {
-			l.Println(err);
+			l.Println("SendMessage error: ", err);
 			dts = true
 		}
-		l.Print(a, " ", b, " ", c)
 	}
 
 	// BACKOFF code, sending failed, we set dts to true and if we're allowed to spool (again, NO from gobler) then we spool.
-	// Optional.
 	if dts && useSpool {
 		l.Printf("Backing off to spool.\n")
 		err := spool.DepositToSpool(c.spoolDir, mp)
