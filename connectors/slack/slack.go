@@ -7,14 +7,15 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/lookup"
 	"github.com/CLIP-HPC/goslmailer/internal/message"
 	"github.com/CLIP-HPC/goslmailer/internal/renderer"
 	"github.com/CLIP-HPC/goslmailer/internal/spool"
+	"github.com/eritikass/githubmarkdownconvertergo"
 	"github.com/slack-go/slack"
 )
 
@@ -137,15 +138,14 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	default:
 		l.Printf("Sending to channelID: %s\n", enduser)
 
-		// Replaces double asterisks with asterisks to work with Slack's markdown
-		// TODO: fix; there should be a function I should be calling?
-		markdown := strings.ReplaceAll(buffer.String(), "**", "*")
+		markdown := githubmarkdownconvertergo.Slack(buffer.String(), githubmarkdownconvertergo.SlackConvertOptions{Headlines: true})
+		// markdown := strings.ReplaceAll(buffer.String(), "**", "*")
 		mdBlock := slack.NewTextBlockObject("mrkdwn", markdown, false, false)
 		sectionBlock := slack.NewSectionBlock(mdBlock, nil, nil)
 		options := slack.MsgOptionBlocks(sectionBlock)
 		_, _, _, err := api.SendMessage(enduser, options)
 		if err != nil {
-			l.Println("SendMessage error: ", err);
+			l.Println("SendMessage error: ", err)
 			dts = true
 		}
 	}
