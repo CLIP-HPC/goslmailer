@@ -60,7 +60,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	l.Print("MessagePack: ", mp)
 
 	// Create a new Slack sesison using the provided bot token
-	api := slack.New(c.token, slack.OptionDebug(true))
+	api := slack.New(c.token)
 
 	enduser, err := lookup.ExtLookupUser(mp.TargetUser, c.useLookup, l)
 	if err != nil {
@@ -71,24 +71,17 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 
 	sendTo := strings.Split(enduser, ":")
 	// Get the correct enduser to send to
-	if sendTo[0] == "email" {
-		user, err := api.GetUserByEmail(sendTo[1])
-		if err != nil {
-			l.Printf("error getting user. incorrect email?")
-		}
-		channel, _, _, err := api.OpenConversation(&slack.OpenConversationParameters{Users: []string{user.ID}})
-		if err != nil {
-			l.Printf("error opening user direct message")
-			return err
-		}
-		enduser = channel.ID
-	} else if sendTo[0] == "user" {
-		channel, _, _, err := api.OpenConversation(&slack.OpenConversationParameters{Users: []string{sendTo[1]}})
-		if err != nil {
-			l.Printf("error opening user direct message. incorrect channel name?")
-			return err
-		}
-		enduser = channel.ID
+	if sendTo[0] == "user" {
+		// If a user just uses --mail-user=slack:user:[channelid] they bypass the check done if they use slack:channel:[channelid].
+		// The bot should not be added to channels it may not send messages in
+		enduser = sendTo[1]
+		// removed to prevent getting ratelimited
+		// channel, _, _, err := api.OpenConversation(&slack.OpenConversationParameters{Users: []string{sendTo[1]}})
+		// if err != nil {
+		// 	l.Printf("error opening user direct message. incorrect channel name?")
+		// 	return err
+		// }
+		// enduser = channel.ID
 	} else if sendTo[0] == "channel" {
 		// check that we may send to this channel
 		for _, v := range strings.Split(c.allowedChannels, ",") {
@@ -145,7 +138,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 		options := slack.MsgOptionBlocks(sectionBlock)
 		_, _, _, err := api.SendMessage(enduser, options)
 		if err != nil {
-			l.Println("SendMessage error: ", err)
+			l.Println("PostMessage error: ", err)
 			dts = true
 		}
 	}
