@@ -34,13 +34,13 @@ func (c *Connector) ConfigConnector(conf map[string]string) error {
 	c.useLookup = conf["useLookup"]
 
 	switch {
-	// token must be present
+	// slack token must be present
 	case c.token == "":
-		return errors.New("discord bot token must be defined, aborting")
+		return errors.New("slack bot token must be defined, aborting")
 	// if renderToFile=="no" or "spool" then spoolDir must not be empty
 	case c.renderToFile == "no" || c.renderToFile == "spool":
 		if c.spoolDir == "" {
-			return errors.New("discord spoolDir must be defined, aborting")
+			return errors.New("slack spoolDir must be defined, aborting")
 		}
 
 	}
