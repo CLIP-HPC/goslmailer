@@ -13,3 +13,4 @@ test_e2e/nohup.out
 test_e2e/rendered*.json
 test_e2e/rendered*.md
 test_e2e/endly
+test_e2e/logs
