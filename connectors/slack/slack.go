@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
@@ -25,8 +24,6 @@ func init() {
 
 func (c *Connector) ConfigConnector(conf map[string]string) error {
 	// Fill out the Connector structure with values from config file
-	c.name = conf["name"]
-	c.allowedChannels = conf["allowedChannels"]
 	c.token = conf["token"]
 	c.messageTemplate = conf["messageTemplate"]
 	c.renderToFile = conf["renderToFile"]
@@ -69,29 +66,8 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 	}
 	l.Printf("Looked up with %q %s -> %s\n", c.useLookup, mp.TargetUser, enduser)
 
-	sendTo := strings.Split(enduser, ":")
 	// Get the correct enduser to send to
-	if sendTo[0] == "user" {
-		// If a user just uses --mail-user=slack:user:[channelid] they bypass the check done if they use slack:channel:[channelid].
-		// The bot should not be added to channels it may not send messages in
-		enduser = sendTo[1]
-		// removed to prevent getting ratelimited
-		// channel, _, _, err := api.OpenConversation(&slack.OpenConversationParameters{Users: []string{sendTo[1]}})
-		// if err != nil {
-		// 	l.Printf("error opening user direct message. incorrect channel name?")
-		// 	return err
-		// }
-		// enduser = channel.ID
-	} else if sendTo[0] == "channel" {
-		// check that we may send to this channel
-		for _, v := range strings.Split(c.allowedChannels, ",") {
-			if v == sendTo[1] {
-				enduser = sendTo[1]
-				break
-			}
-		}
-	}
-
+	// The bot should not be added to channels it may not send messages in.
 	if c.renderToFile != "spool" {
 		// buffer to place rendered json in
 		buffer = bytes.Buffer{}
@@ -129,7 +105,7 @@ func (c *Connector) SendMessage(mp *message.MessagePack, useSpool bool, l *log.L
 			}
 		}
 	default:
-		l.Printf("Sending to channelID: %s\n", enduser)
+		l.Printf("Sending to channelID or userID: %s\n", enduser)
 
 		markdown := githubmarkdownconvertergo.Slack(buffer.String(), githubmarkdownconvertergo.SlackConvertOptions{Headlines: true})
 		// markdown := strings.ReplaceAll(buffer.String(), "**", "*")

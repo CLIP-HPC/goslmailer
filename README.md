@@ -37,11 +37,12 @@
 
 ## Drop-in notification delivery solution for slurm that can do:
 
-* message delivery to: 
+* message delivery to:
   * [**discord**](https://discord.com/)
   * [**matrix**](https://matrix.org/)
   * [**telegram**](https://telegram.org/)
   * [**msteams**](https://teams.com)
+  * [**slack**](https://slack.com)
   * [**e-mail**](https://en.wikipedia.org/wiki/Email)
 * gathering of job **statistics**
 * generating **hints** for users on how to tune their job scripts (see examples below)
@@ -74,11 +75,12 @@ To support future additional receiver schemes, a [connector package](connectors/
 
 ## Currently available connectors:
 
-* [**discord**](#discord-connector) bot --mail-user=`discord`:channelId
-* [**matrix**](#matrix-connector) bot --mail-user=`matrix:`roomId
-* [**telegram**](#telegram-connector) bot --mail-user=`telegram:`chatId
-* [**mailto**](#mailto-connector) --mail-user=`mailto:`email-addr
-* [**msteams**](#msteams-connector) webhook --mail-user=`msteams:`userid
+* [**discord**](#discord-connector) bot `--mail-user=discord:<channelId>`
+* [**matrix**](#matrix-connector) bot `--mail-user=matrix:<roomId>`
+* [**telegram**](#telegram-connector) bot `--mail-user=telegram:<chatId>`
+* [**mailto**](#mailto-connector) `--mail-user=mailto:<email-addr>`
+* [**msteams**](#msteams-connector) webhook `--mail-user=msteams:<userId>`
+* [**slack**](#slack-connector) web API `--mail-user=slack:user:<userId>` OR `--mail-user=slack:channel:<channelId>`
 
 See each connector details below...
 
@@ -215,6 +217,7 @@ On startup, gobler reads its config file and spins-up a `connector monitor` for 
 | telegram  | yes                       |
 | msteams   | yes                       |
 | mailto    | no                        |
+| slack     | yes                       |
 
 ### default connector
 
@@ -276,6 +279,7 @@ Or follow this [tutorial](https://discordpy.readthedocs.io/en/stable/discord.htm
 ![Discord card](./images/discord.png)
 
 * discord bot and packaged developed using [discordgo](https://github.com/bwmarrin/discordgo) and with the help of _Discord Gophers_
+
 ---
 
 ### telegram connector
@@ -380,12 +384,38 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ---
 
+### slack connector
+
+Sends messages to direct messages or channels in Slack using its Web Api and [slack-go](https://github.com/slack-go/slack).
+
+Prerequisite for the slack connector:
+
+1. a slack app must be created
+
+
+#### Slack App setup
+
+1. Go to the [Slack App portal](https://api.slack.com/apps?new_app=1). Give your app a name (such as "SlurmBot"), and choose the workspace you want to use the app in. ***You must be allowed to add apps to this workspace.***
+2. Click on **OAuth & Permissions** on the sidebar. Scroll down to **Scopes** and click on **Add an OAuth Scope.** Add `chat:write` and `im:write`.
+3. Scroll back up to **OAuth Tokens for Your Workspace** and copy the **Bot User OAuth Token**. It should look something like `xoxb-1234567890123-1234567890123-abcd1ABCDefghiE2jkFGlmI`. This will be used in your goslmailer config (`goslmailer.conf` or `goslmailer.toml`), and gobler config if used.
+
+![Slack card](./images/slack.png)
+
+#### Notes
+
+The bot will be able to send to any channel it's in. Make sure it is not added to channels it shouldn't send messages in (such as an announcments channel). You can add the bot to a channel by pinging it (send a message with just @SlurmBot, for example) and then click on **Add to Channel**.
+
+* [slack-go](https://github.com/slack-go/slack) used in this connector.
+
+---
+
 ## Gotchas
 
 ### msteams
 
 * using adaptive card schema version 1.5 doesn't work with our adaptive card, check if some element changed in designer
     * tested: 1.0, 1.2 - work
+
 
 ## references
 
