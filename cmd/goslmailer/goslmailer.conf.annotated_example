@@ -37,13 +37,19 @@
       "triggerString": "showmeslurm",               # string (in channel or DM) that triggers the bot to respond with an instructional DM to the user
       "token": "PasteBotTokenHere",                 # place to put the bot token
       "messageTemplate": "/path/to/template.md"     # template file to use
-    }
+    },
     "matrix": {
       "username": "@myuser:matrix.org",
       "token": "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93",
       "homeserver": "matrix.org",
       "template": "/path/to/matrix_template.md"
     },
+    "slack": {
+      "token": "PasteSlackBotTokenHere",            # Paste Slack Bot User OAuth Token here
+      "messageTemplate": "/path/to/template.md",    # template file to use
+      "renderToFile": "spool",                      # debug render of message to local file instead of sending ("yes" - render to file, "no" - send, "spool" - spool for gobler)
+      "spoolDir": "/tmp"                            # where to spool
+    }
     "textfile": {                                   # fictitious "textfile" connector, package code for it doesn't exist, implementation left as the exercise for the reader
       "path": "/tmp"                                # see above.
     }

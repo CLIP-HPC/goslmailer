@@ -9,6 +9,7 @@ import (
 	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/slack"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
 	"github.com/CLIP-HPC/goslmailer/internal/connectors"
 	"github.com/CLIP-HPC/goslmailer/internal/logger"
@@ -49,7 +50,7 @@ func main() {
 
 	version.DumpVersion(l)
 
-	cfg.DumpConfig(l)
+	// cfg.DumpConfig(l)
 
 	// get '-s "subject" userid' command line parameters with which we're called
 	ic.getCMDLine()

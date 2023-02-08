@@ -9,6 +9,7 @@ import (
 	_ "github.com/CLIP-HPC/goslmailer/connectors/mailto"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/matrix"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/msteams"
+	_ "github.com/CLIP-HPC/goslmailer/connectors/slack"
 	_ "github.com/CLIP-HPC/goslmailer/connectors/telegram"
 	"github.com/CLIP-HPC/goslmailer/internal/cmdline"
 	"github.com/CLIP-HPC/goslmailer/internal/config"
@@ -57,7 +58,7 @@ func main() {
 
 	version.DumpVersion(l)
 
-	cfg.DumpConfig(l)
+	// cfg.DumpConfig(l)
 
 	// populate map with configured referenced connectors
 	err = connectors.ConMap.PopulateConnectors(cfg, l)

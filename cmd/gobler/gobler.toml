@@ -43,6 +43,7 @@ numSenders = "4"
 # On receipt of new messages from the `monitor`, `picker` will scan the list and delete latest messages above this limit.
 # The number of deleted messages is recorded in the messagepack structure and can be referenced like this: `{{ .Job.PrunedMessageCount }}`
 # in the template to notify user that some of his messages were deleted.
+# Unlimited if this is set to 0.
 maxMsgPU = "5"
 
 [connectors.telegram]

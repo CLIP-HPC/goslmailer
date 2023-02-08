@@ -82,7 +82,12 @@ func sortGobsTimeReverse(toSort []spool.FileGob) {
 // trimExcessiveMsgs is called after new gobs list is received from monitor.
 // Deletes all gobs for every user above the MaxMsgPerUser limit.
 // Modifies count of deleted gobs in picker.deletedcount["username"] and picker.messagecount["username"].
+// Does nothing if MaxMsgPerUser is 0.
 func (p *picker) trimExcessiveMsgs(allGobs *spool.SpooledGobs, mpu int, l *log.Logger) error {
+
+	if mpu == 0 {
+		return nil
+	}
 
 	var sortedGobs []spool.FileGob
 
