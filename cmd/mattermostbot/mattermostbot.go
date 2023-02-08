@@ -92,18 +92,18 @@ func main() {
 
 		l.Printf("Listening to event channels...\n")
 		for resp := range webSocketClient.EventChannel {
-			l.Printf("GOT WS EVENT: %#v\n", resp)
+			//l.Printf("GOT WS EVENT: %#v\n", resp)
 			data := resp.GetData()
-			l.Printf("Data: %#v\n", data)
+			//l.Printf("Data: %#v\n", data)
 			l.Printf("Channel name: %s\n", data["channel_name"])
-			l.Printf("JSON: %s\n", resp.ToJson())
+			//l.Printf("JSON: %s\n", resp.ToJson())
 
 			x, ok := resp.GetData()["post"].(string)
 			if !ok {
 				l.Printf("Info: post == nil, skipping.\n")
 			} else {
 				post := model.PostFromJson(strings.NewReader(x))
-				l.Printf("POST: %#v\n", post)
+				//l.Printf("POST: %#v\n", post)
 				l.Printf("POST.channelid: %s\n", post.ChannelId)
 				l.Printf("POST.userid: %s\n", post.UserId)
 				l.Printf("POST.message: %s\n", post.Message)
