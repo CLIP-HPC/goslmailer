@@ -80,7 +80,7 @@ To support future additional receiver schemes, a [connector package](connectors/
 * [**telegram**](#telegram-connector) bot `--mail-user=telegram:<chatId>`
 * [**mailto**](#mailto-connector) `--mail-user=mailto:<email-addr>`
 * [**msteams**](#msteams-connector) webhook `--mail-user=msteams:<userId>`
-* [**slack**](#slack-connector) web API `--mail-user=slack:user:<userId>` OR `--mail-user=slack:channel:<channelId>`
+* [**slack**](#slack-connector) web API `--mail-user=slack:<userId>` OR `--mail-user=slack:<channelId>`
 * [**mattermost**](#mattermost-connector) --mail-user=`mattermost`:channelId
 
 See each connector details below...
@@ -406,18 +406,18 @@ See [annotated configuration example](cmd/goslmailer/goslmailer.conf.annotated_e
 
 ### slack connector
 
-Sends messages to direct messages or channels in Slack using its Web Api and [slack-go](https://github.com/slack-go/slack).
+Sends messages to direct messages or channels in Slack using its Web API and [slack-go](https://github.com/slack-go/slack).
 
 Prerequisite for the slack connector:
 
-1. a slack app must be created
+1. A Slack App must be created
 
 
 #### Slack App setup
 
 1. Go to the [Slack App portal](https://api.slack.com/apps?new_app=1). Give your app a name (such as "SlurmBot"), and choose the workspace you want to use the app in. ***You must be allowed to add apps to this workspace.***
 2. Click on **OAuth & Permissions** on the sidebar. Scroll down to **Scopes** and click on **Add an OAuth Scope.** Add `chat:write` and `im:write`.
-3. Scroll back up to **OAuth Tokens for Your Workspace** and copy the **Bot User OAuth Token**. It should look something like `xoxb-1234567890123-1234567890123-abcd1ABCDefghiE2jkFGlmI`. This will be used in your goslmailer config (`goslmailer.conf` or `goslmailer.toml`), and gobler config if used.
+3. Scroll back up to **OAuth Tokens for Your Workspace** and copy the **Bot User OAuth Token**. It should look something like `xoxb-5555555555555-5555555555555-XXXXXXXXXXXXXXXXXXXXXXX`. This will be used in your goslmailer config (`goslmailer.conf` or `goslmailer.toml`), and gobler config if used.
 
 ![Slack card](./images/slack.png)
 
