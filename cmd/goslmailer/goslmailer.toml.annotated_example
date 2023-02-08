@@ -51,6 +51,14 @@ triggerString = "showmeslurm"                       # string (in channel or DM) 
 token = "PasteBotTokenHere"                         # place to put the bot token
 messageTemplate = "/path/to/template.md"            # template file to use
 
+[connectors.mattermost]
+name = "MatTheSlurmBot",                                   # mandatory, name used in the bot welcome message
+serverUrl = "https://someSpaceName.cloud.mattermost.com",  # mandatory, REST url which client uses to send messages
+wsUrl = "wss://someSpaceName.cloud.mattermost.com",        # mandatory, websocket event delivery system endpoint
+token = "PasteBotTokenHere",                               # mandatory, bot access token
+triggerString = "showmeslurm",                             # string on which bot reacts with the --mail-user message
+messageTemplate = "/path/to/mattermostTemplate.md"         # markdown template (example in ./templates/mattermostTemplate.md)
+
 [connectors.matrix]
 username = "@myuser:matrix.org"
 token = "syt_dGRpZG9ib3QXXXXXXXEyQMBEmvOVp_10Jm93"

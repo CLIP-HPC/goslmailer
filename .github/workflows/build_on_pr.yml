@@ -23,11 +23,12 @@ jobs:
         mkdir ~/.ssh
         touch ~/.ssh/authorized_keys
         chmod 600 ~/.ssh/authorized_keys
-        ssh-keygen -b 1024 -t rsa -f id_rsa -P "" -f ~/.secret/id_rsa
+        ssh-keygen -t ed25519 -f id_rsa -P "" -f ~/.secret/id_rsa
         cat ~/.secret/id_rsa.pub >>  ~/.ssh/authorized_keys
+        echo "set enable-bracketed-paste off" >> ~/.inputrc
         cat >>~/.ssh/config <<END
         Host localhost
-          IdentityFile ~/.secret/id.rsa
+          IdentityFile ~/.secret/id_rsa
           StrictHostKeyChecking no
         END
 
@@ -49,5 +50,5 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1
       with:
-        name: goslmailer-${{ github.ref_name }}
+        name: goslmailer-${{ github.sha }}
         path: build/goslmailer-${{ github.sha }}/
