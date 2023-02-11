@@ -15,6 +15,7 @@ import (
 )
 
 type ConfigContainer struct {
+	DebugConfig      bool                         `json:"debugconfig"`
 	Logfile          string                       `json:"logfile"`
 	Binpaths         map[string]string            `json:"binpaths"`
 	DefaultConnector string                       `json:"defaultconnector"`
@@ -73,8 +74,10 @@ func (cc *ConfigContainer) testNsetBinPaths() error {
 }
 
 func (cc *ConfigContainer) DumpConfig(l *log.Logger) {
-	l.Println("DUMP CONFIG:")
-	l.Printf("CONFIGURATION: %#v\n", cc)
-	l.Printf("CONFIGURATION logfile: %s\n", cc.Logfile)
-	l.Println("--------------------------------------------------------------------------------")
+	if cc.DebugConfig {
+		l.Printf("DUMP CONFIG:\n")
+		l.Printf("CONFIGURATION: %#v\n", cc)
+		l.Printf("CONFIGURATION logfile: %s\n", cc.Logfile)
+		l.Printf("--------------------------------------------------------------------------------\n")
+	}
 }

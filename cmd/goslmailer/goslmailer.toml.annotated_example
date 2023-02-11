@@ -5,6 +5,9 @@
 # if specified; append logs to this file; else; dump to stderr
 logfile = "/tmp/goslmailer.log"
 
+# if specified and true ; goslmailer and gobler will dump configuration to log; else; they won't
+debugconfig = true
+
 # default connector to be used for message delivery for receivers without full 'connector:user' specification
 defaultconnector = "msteams"
 

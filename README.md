@@ -2,6 +2,14 @@
 
 > **News & Info**
 >
+>### [Discussion forums](https://github.com/CLIP-HPC/goslmailer/discussions) have been enabled for this project, feel free to share your thoughts and ideas there.
+>
+> v2.7.1
+>
+> * In v2.7.0 dumping of configuration at goslmailer/gobler startup was removed.
+> * Now it can be selectively enabled with `debugconfig: true` parameter in [config file](./cmd/goslmailer/goslmailer.conf.annotated_example)
+> 
+>
 > v2.7.0
 >
 > * [slack connector](#slack-connector)
