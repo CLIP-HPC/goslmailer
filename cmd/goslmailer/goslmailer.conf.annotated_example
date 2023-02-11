@@ -1,5 +1,6 @@
 {                                                   # don't forget to remove the '#' comments if using this template
   "logfile": "/tmp/goslmailer.log",                 # if specified; append logs to this file; else; dump to stderr
+  "debugconfig": true,                              # if specified and true ; goslmailer and gobler will dump configuration to log; else; they won't
   "binpaths": {                                     # paths to slurm binaries (optional, will default to these if not specified)
     "sacct":"/usr/bin/sacct",
     "sstat":"/usr/bin/sstat"
