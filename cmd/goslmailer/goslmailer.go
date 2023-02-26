@@ -42,9 +42,12 @@ func main() {
 	}
 
 	// setup logger
+	log.Printf("About to setup logger.")
 	l, err := logger.SetupLogger(cfg.Logfile, "goslmailer")
 	if err != nil {
-		l.Fatalf("setuplogger(%s) failed with: %q\n", cfg.Logfile, err)
+		// https://github.com/CLIP-HPC/goslmailer/issues/31
+		// SetupLogger() now backs off to Stderr and returns us the error msg.
+		l.Fatalf("Setuplogger() failed to setup logging to file: %s", err)
 	}
 
 	l.Println("======================== START OF RUN ==========================================")

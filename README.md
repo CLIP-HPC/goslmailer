@@ -4,6 +4,11 @@
 >
 >### [Discussion forums](https://github.com/CLIP-HPC/goslmailer/discussions) have been enabled for this project, feel free to share your thoughts and ideas there.
 >
+>
+> v2.7.2
+>
+> * If goslmailer could not write to configured log file, it would panic. Now we log that and abort more gracefully. (message in slurmctld.log)
+>
 > v2.7.1
 >
 > * In v2.7.0 dumping of configuration at goslmailer/gobler startup was removed.
